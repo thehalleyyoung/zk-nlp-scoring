@@ -1,0 +1,839 @@
+{
+  "timestamp": "2026-02-26T12:30:35.562641+00:00",
+  "summary": {
+    "total_input_pairs": 205,
+    "total_metrics": 6,
+    "total_triple_checks": 1230,
+    "total_disagreements": 0,
+    "overall_agreement_rate": 1.0,
+    "all_metrics_agree": true,
+    "total_certifications": 25,
+    "certifications_verified": 25,
+    "total_wall_clock_ms": 7004.305834
+  },
+  "corpus_description": {
+    "categories": [
+      {
+        "name": "mmlu_qa",
+        "count": 50,
+        "description": "MMLU-style multiple-choice Q&A"
+      },
+      {
+        "name": "squad_qa",
+        "count": 50,
+        "description": "SQuAD-style extractive question answering"
+      },
+      {
+        "name": "translation",
+        "count": 40,
+        "description": "Translation / paraphrase quality"
+      },
+      {
+        "name": "code_completion",
+        "count": 40,
+        "description": "Code completion (HumanEval-style)"
+      },
+      {
+        "name": "edge_cases",
+        "count": 25,
+        "description": "Edge cases: empty, single token, long, unicode"
+      }
+    ],
+    "total_pairs": 205
+  },
+  "metric_results": [
+    {
+      "metric_name": "exact_match",
+      "total_pairs": 205,
+      "mean_score": 0.24390243902439024,
+      "min_score": 0.0,
+      "max_score": 1.0,
+      "std_dev": 0.42943455760143867,
+      "triple_agreements": 205,
+      "triple_disagreements": 0,
+      "agreement_rate": 1.0,
+      "total_time_ms": 6886.8476980000005,
+      "per_pair_time_us": 33594.37901463415
+    },
+    {
+      "metric_name": "token_f1",
+      "total_pairs": 205,
+      "mean_score": 0.5926188959250307,
+      "min_score": 0.0,
+      "max_score": 1.0,
+      "std_dev": 0.3346112221106984,
+      "triple_agreements": 205,
+      "triple_disagreements": 0,
+      "agreement_rate": 1.0,
+      "total_time_ms": 2.6387110000000007,
+      "per_pair_time_us": 12.87176097560976
+    },
+    {
+      "metric_name": "bleu",
+      "total_pairs": 205,
+      "mean_score": 0.5430285684878103,
+      "min_score": 0.0,
+      "max_score": 1.0,
+      "std_dev": 0.35009990278150566,
+      "triple_agreements": 205,
+      "triple_disagreements": 0,
+      "agreement_rate": 1.0,
+      "total_time_ms": 13.091831999999995,
+      "per_pair_time_us": 63.862595121951195
+    },
+    {
+      "metric_name": "rouge1",
+      "total_pairs": 205,
+      "mean_score": 0.5926188959250307,
+      "min_score": 0.0,
+      "max_score": 1.0,
+      "std_dev": 0.3346112221106984,
+      "triple_agreements": 205,
+      "triple_disagreements": 0,
+      "agreement_rate": 1.0,
+      "total_time_ms": 2.6877449999999996,
+      "per_pair_time_us": 13.110951219512192
+    },
+    {
+      "metric_name": "rouge_l",
+      "total_pairs": 205,
+      "mean_score": 0.5859118938221829,
+      "min_score": 0.0,
+      "max_score": 1.0,
+      "std_dev": 0.33382952690281237,
+      "triple_agreements": 205,
+      "triple_disagreements": 0,
+      "agreement_rate": 1.0,
+      "total_time_ms": 1.7501160000000004,
+      "per_pair_time_us": 8.537151219512197
+    },
+    {
+      "metric_name": "chrf",
+      "total_pairs": 205,
+      "mean_score": 0.5014892349870077,
+      "min_score": 0.0,
+      "max_score": 1.0,
+      "std_dev": 0.3117638542404472,
+      "triple_agreements": 205,
+      "triple_disagreements": 0,
+      "agreement_rate": 1.0,
+      "total_time_ms": 59.02537400000001,
+      "per_pair_time_us": 287.92865365853663
+    }
+  ],
+  "per_category_results": [
+    {
+      "category": "mmlu_qa",
+      "num_pairs": 50,
+      "metrics": [
+        {
+          "metric": "exact_match",
+          "mean_score": 0.58,
+          "agreement_rate": 1.0,
+          "time_ms": 0.28353900000000004
+        },
+        {
+          "metric": "token_f1",
+          "mean_score": 0.6133333333333334,
+          "agreement_rate": 1.0,
+          "time_ms": 0.184001
+        },
+        {
+          "metric": "bleu",
+          "mean_score": 0.92047372574083,
+          "agreement_rate": 1.0,
+          "time_ms": 0.215333
+        },
+        {
+          "metric": "rouge1",
+          "mean_score": 0.6133333333333334,
+          "agreement_rate": 1.0,
+          "time_ms": 0.122835
+        },
+        {
+          "metric": "rouge_l",
+          "mean_score": 0.6133333333333334,
+          "agreement_rate": 1.0,
+          "time_ms": 0.06395299999999998
+        },
+        {
+          "metric": "chrf",
+          "mean_score": 0.41694636815213315,
+          "agreement_rate": 1.0,
+          "time_ms": 2.226584
+        }
+      ]
+    },
+    {
+      "category": "squad_qa",
+      "num_pairs": 50,
+      "metrics": [
+        {
+          "metric": "exact_match",
+          "mean_score": 0.02,
+          "agreement_rate": 1.0,
+          "time_ms": 0.7125829999999999
+        },
+        {
+          "metric": "token_f1",
+          "mean_score": 0.4929460722853055,
+          "agreement_rate": 1.0,
+          "time_ms": 0.787084
+        },
+        {
+          "metric": "bleu",
+          "mean_score": 0.21329010857402156,
+          "agreement_rate": 1.0,
+          "time_ms": 4.009706
+        },
+        {
+          "metric": "rouge1",
+          "mean_score": 0.4929460722853055,
+          "agreement_rate": 1.0,
+          "time_ms": 0.8382909999999999
+        },
+        {
+          "metric": "rouge_l",
+          "mean_score": 0.4821414745841561,
+          "agreement_rate": 1.0,
+          "time_ms": 0.353744
+        },
+        {
+          "metric": "chrf",
+          "mean_score": 0.41511510695356063,
+          "agreement_rate": 1.0,
+          "time_ms": 22.233873999999997
+        }
+      ]
+    },
+    {
+      "category": "translation",
+      "num_pairs": 40,
+      "metrics": [
+        {
+          "metric": "exact_match",
+          "mean_score": 0.0,
+          "agreement_rate": 1.0,
+          "time_ms": 0.25616099999999997
+        },
+        {
+          "metric": "token_f1",
+          "mean_score": 0.5507299767226239,
+          "agreement_rate": 1.0,
+          "time_ms": 0.5070830000000002
+        },
+        {
+          "metric": "bleu",
+          "mean_score": 0.2981149493144569,
+          "agreement_rate": 1.0,
+          "time_ms": 2.5382490000000004
+        },
+        {
+          "metric": "rouge1",
+          "mean_score": 0.5507299767226239,
+          "agreement_rate": 1.0,
+          "time_ms": 0.6676240000000001
+        },
+        {
+          "metric": "rouge_l",
+          "mean_score": 0.5333057342983815,
+          "agreement_rate": 1.0,
+          "time_ms": 0.24108500000000002
+        },
+        {
+          "metric": "chrf",
+          "mean_score": 0.44118681685198996,
+          "agreement_rate": 1.0,
+          "time_ms": 13.280667
+        }
+      ]
+    },
+    {
+      "category": "code_completion",
+      "num_pairs": 40,
+      "metrics": [
+        {
+          "metric": "exact_match",
+          "mean_score": 0.275,
+          "agreement_rate": 1.0,
+          "time_ms": 0.6626669999999998
+        },
+        {
+          "metric": "token_f1",
+          "mean_score": 0.7298426078698601,
+          "agreement_rate": 1.0,
+          "time_ms": 0.648044
+        },
+        {
+          "metric": "bleu",
+          "mean_score": 0.6027467796278049,
+          "agreement_rate": 1.0,
+          "time_ms": 3.1419989999999993
+        },
+        {
+          "metric": "rouge1",
+          "mean_score": 0.7298426078698601,
+          "agreement_rate": 1.0,
+          "time_ms": 0.563536
+        },
+        {
+          "metric": "rouge_l",
+          "mean_score": 0.7263992116434451,
+          "agreement_rate": 1.0,
+          "time_ms": 0.338541
+        },
+        {
+          "metric": "chrf",
+          "mean_score": 0.7713723942351808,
+          "agreement_rate": 1.0,
+          "time_ms": 14.18554
+        }
+      ]
+    },
+    {
+      "category": "edge_cases",
+      "num_pairs": 25,
+      "metrics": [
+        {
+          "metric": "exact_match",
+          "mean_score": 0.36,
+          "agreement_rate": 1.0,
+          "time_ms": 6884.932748000001
+        },
+        {
+          "metric": "token_f1",
+          "mean_score": 0.5980000000000001,
+          "agreement_rate": 1.0,
+          "time_ms": 0.512499
+        },
+        {
+          "metric": "bleu",
+          "mean_score": 0.7439278266627244,
+          "agreement_rate": 1.0,
+          "time_ms": 3.1865449999999993
+        },
+        {
+          "metric": "rouge1",
+          "mean_score": 0.5980000000000001,
+          "agreement_rate": 1.0,
+          "time_ms": 0.49545900000000004
+        },
+        {
+          "metric": "rouge_l",
+          "mean_score": 0.5980000000000001,
+          "agreement_rate": 1.0,
+          "time_ms": 0.7527929999999998
+        },
+        {
+          "metric": "chrf",
+          "mean_score": 0.5079940389426004,
+          "agreement_rate": 1.0,
+          "time_ms": 7.098708999999999
+        }
+      ]
+    }
+  ],
+  "certification_results": [
+    {
+      "metric": "exact_match",
+      "candidate_preview": "the cat sat on the mat",
+      "reference_preview": "the cat sat on the mat",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "276e67b7c3027dc356feb6c91491e60efe1951b2db889cd5267fb595c8588659",
+      "prove_time_ms": 1.060334,
+      "verify_time_ms": 0.218792,
+      "proof_size_bytes": 30312,
+      "num_wfa_states": 8,
+      "num_constraints": 16,
+      "trace_length": 8
+    },
+    {
+      "metric": "exact_match",
+      "candidate_preview": "hello world",
+      "reference_preview": "hello there world",
+      "score": 0.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "331c23693a2974dd66e1b8aeb5aa4bb1ac939f1234d0d9aaedf3a81c2eaf97b7",
+      "prove_time_ms": 0.767459,
+      "verify_time_ms": 0.199625,
+      "proof_size_bytes": 29088,
+      "num_wfa_states": 5,
+      "num_constraints": 10,
+      "trace_length": 8
+    },
+    {
+      "metric": "exact_match",
+      "candidate_preview": "machine learning is great",
+      "reference_preview": "deep learning is wonderful",
+      "score": 0.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "36b8f258741d9795a7b82184f16c1e75136c9e35ea6b1869d7ab3d67d3c670c0",
+      "prove_time_ms": 0.8113750000000001,
+      "verify_time_ms": 0.196958,
+      "proof_size_bytes": 29496,
+      "num_wfa_states": 6,
+      "num_constraints": 12,
+      "trace_length": 8
+    },
+    {
+      "metric": "exact_match",
+      "candidate_preview": "Paris",
+      "reference_preview": "Paris",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "70ccfe59b14733bbf1863c3d94078301ba36ec6f48e932ebbae3b5d319b20938",
+      "prove_time_ms": 0.551417,
+      "verify_time_ms": 0.187792,
+      "proof_size_bytes": 28272,
+      "num_wfa_states": 3,
+      "num_constraints": 6,
+      "trace_length": 8
+    },
+    {
+      "metric": "exact_match",
+      "candidate_preview": "alpha beta gamma",
+      "reference_preview": "alpha gamma delta",
+      "score": 0.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "8dab3c4837fc91c7a002e12a788f83878139cf14e2822ec5d6e1584659b2e557",
+      "prove_time_ms": 0.74975,
+      "verify_time_ms": 0.193458,
+      "proof_size_bytes": 29088,
+      "num_wfa_states": 5,
+      "num_constraints": 10,
+      "trace_length": 8
+    },
+    {
+      "metric": "token_f1",
+      "candidate_preview": "the cat sat on the mat",
+      "reference_preview": "the cat sat on the mat",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "67d441b025cc0b1fd2e9c8fc670b938d191289c2c319977d238e53d8cd8d0a37",
+      "prove_time_ms": 0.895334,
+      "verify_time_ms": 0.194375,
+      "proof_size_bytes": 29904,
+      "num_wfa_states": 7,
+      "num_constraints": 14,
+      "trace_length": 8
+    },
+    {
+      "metric": "token_f1",
+      "candidate_preview": "hello world",
+      "reference_preview": "hello there world",
+      "score": 0.8,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "4b29b6afac9006ff450cd75c7d08658794f8469c5c54ca330b0bd2e2643af259",
+      "prove_time_ms": 0.49095900000000003,
+      "verify_time_ms": 0.196667,
+      "proof_size_bytes": 28272,
+      "num_wfa_states": 3,
+      "num_constraints": 6,
+      "trace_length": 8
+    },
+    {
+      "metric": "token_f1",
+      "candidate_preview": "machine learning is great",
+      "reference_preview": "deep learning is wonderful",
+      "score": 0.5,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "8540a9925723d9b218266e71d656cc7b76083ed8fdab64382850f22c6885687a",
+      "prove_time_ms": 0.766875,
+      "verify_time_ms": 0.204208,
+      "proof_size_bytes": 29088,
+      "num_wfa_states": 5,
+      "num_constraints": 10,
+      "trace_length": 8
+    },
+    {
+      "metric": "token_f1",
+      "candidate_preview": "Paris",
+      "reference_preview": "Paris",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "54c33f7ce06ff82a6ee6f6ace7bccd21964605cae68ff29bb755c8b2ef206a87",
+      "prove_time_ms": 0.388083,
+      "verify_time_ms": 0.215958,
+      "proof_size_bytes": 27864,
+      "num_wfa_states": 2,
+      "num_constraints": 4,
+      "trace_length": 8
+    },
+    {
+      "metric": "token_f1",
+      "candidate_preview": "alpha beta gamma",
+      "reference_preview": "alpha gamma delta",
+      "score": 0.6666666666666666,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "5e32d8dd4f990dc76c9d9d36add1f73dccfc180f553ac97eb350e6e0e9996c27",
+      "prove_time_ms": 0.604166,
+      "verify_time_ms": 0.217916,
+      "proof_size_bytes": 28680,
+      "num_wfa_states": 4,
+      "num_constraints": 8,
+      "trace_length": 8
+    },
+    {
+      "metric": "bleu",
+      "candidate_preview": "the cat sat on the mat",
+      "reference_preview": "the cat sat on the mat",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "67d441b025cc0b1fd2e9c8fc670b938d191289c2c319977d238e53d8cd8d0a37",
+      "prove_time_ms": 0.895333,
+      "verify_time_ms": 0.20633300000000002,
+      "proof_size_bytes": 29904,
+      "num_wfa_states": 7,
+      "num_constraints": 14,
+      "trace_length": 8
+    },
+    {
+      "metric": "bleu",
+      "candidate_preview": "hello world",
+      "reference_preview": "hello there world",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "4b29b6afac9006ff450cd75c7d08658794f8469c5c54ca330b0bd2e2643af259",
+      "prove_time_ms": 0.48391599999999996,
+      "verify_time_ms": 0.189,
+      "proof_size_bytes": 28272,
+      "num_wfa_states": 3,
+      "num_constraints": 6,
+      "trace_length": 8
+    },
+    {
+      "metric": "bleu",
+      "candidate_preview": "machine learning is great",
+      "reference_preview": "deep learning is wonderful",
+      "score": 0.5,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "8540a9925723d9b218266e71d656cc7b76083ed8fdab64382850f22c6885687a",
+      "prove_time_ms": 0.645458,
+      "verify_time_ms": 0.19495800000000002,
+      "proof_size_bytes": 29088,
+      "num_wfa_states": 5,
+      "num_constraints": 10,
+      "trace_length": 8
+    },
+    {
+      "metric": "bleu",
+      "candidate_preview": "Paris",
+      "reference_preview": "Paris",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "54c33f7ce06ff82a6ee6f6ace7bccd21964605cae68ff29bb755c8b2ef206a87",
+      "prove_time_ms": 0.34179099999999996,
+      "verify_time_ms": 0.185791,
+      "proof_size_bytes": 27864,
+      "num_wfa_states": 2,
+      "num_constraints": 4,
+      "trace_length": 8
+    },
+    {
+      "metric": "bleu",
+      "candidate_preview": "alpha beta gamma",
+      "reference_preview": "alpha gamma delta",
+      "score": 0.6666666666666666,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "5e32d8dd4f990dc76c9d9d36add1f73dccfc180f553ac97eb350e6e0e9996c27",
+      "prove_time_ms": 0.556583,
+      "verify_time_ms": 0.189667,
+      "proof_size_bytes": 28680,
+      "num_wfa_states": 4,
+      "num_constraints": 8,
+      "trace_length": 8
+    },
+    {
+      "metric": "rouge_1",
+      "candidate_preview": "the cat sat on the mat",
+      "reference_preview": "the cat sat on the mat",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "67d441b025cc0b1fd2e9c8fc670b938d191289c2c319977d238e53d8cd8d0a37",
+      "prove_time_ms": 0.875625,
+      "verify_time_ms": 0.195166,
+      "proof_size_bytes": 29904,
+      "num_wfa_states": 7,
+      "num_constraints": 14,
+      "trace_length": 8
+    },
+    {
+      "metric": "rouge_1",
+      "candidate_preview": "hello world",
+      "reference_preview": "hello there world",
+      "score": 0.8,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "4b29b6afac9006ff450cd75c7d08658794f8469c5c54ca330b0bd2e2643af259",
+      "prove_time_ms": 0.47225,
+      "verify_time_ms": 0.209333,
+      "proof_size_bytes": 28272,
+      "num_wfa_states": 3,
+      "num_constraints": 6,
+      "trace_length": 8
+    },
+    {
+      "metric": "rouge_1",
+      "candidate_preview": "machine learning is great",
+      "reference_preview": "deep learning is wonderful",
+      "score": 0.5,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "8540a9925723d9b218266e71d656cc7b76083ed8fdab64382850f22c6885687a",
+      "prove_time_ms": 0.706916,
+      "verify_time_ms": 0.203709,
+      "proof_size_bytes": 29088,
+      "num_wfa_states": 5,
+      "num_constraints": 10,
+      "trace_length": 8
+    },
+    {
+      "metric": "rouge_1",
+      "candidate_preview": "Paris",
+      "reference_preview": "Paris",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "54c33f7ce06ff82a6ee6f6ace7bccd21964605cae68ff29bb755c8b2ef206a87",
+      "prove_time_ms": 0.39129200000000003,
+      "verify_time_ms": 0.18637499999999999,
+      "proof_size_bytes": 27864,
+      "num_wfa_states": 2,
+      "num_constraints": 4,
+      "trace_length": 8
+    },
+    {
+      "metric": "rouge_1",
+      "candidate_preview": "alpha beta gamma",
+      "reference_preview": "alpha gamma delta",
+      "score": 0.6666666666666666,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "5e32d8dd4f990dc76c9d9d36add1f73dccfc180f553ac97eb350e6e0e9996c27",
+      "prove_time_ms": 0.606334,
+      "verify_time_ms": 0.19,
+      "proof_size_bytes": 28680,
+      "num_wfa_states": 4,
+      "num_constraints": 8,
+      "trace_length": 8
+    },
+    {
+      "metric": "chrf",
+      "candidate_preview": "the cat sat on the mat",
+      "reference_preview": "the cat sat on the mat",
+      "score": 0.45454545454545453,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": false,
+      "metric_bound": true,
+      "wfa_commitment": "67d441b025cc0b1fd2e9c8fc670b938d191289c2c319977d238e53d8cd8d0a37",
+      "prove_time_ms": 0.973959,
+      "verify_time_ms": 0.314958,
+      "proof_size_bytes": 29904,
+      "num_wfa_states": 7,
+      "num_constraints": 14,
+      "trace_length": 8
+    },
+    {
+      "metric": "chrf",
+      "candidate_preview": "hello world",
+      "reference_preview": "hello there world",
+      "score": 0.5714285714285714,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": false,
+      "metric_bound": true,
+      "wfa_commitment": "4b29b6afac9006ff450cd75c7d08658794f8469c5c54ca330b0bd2e2643af259",
+      "prove_time_ms": 0.548667,
+      "verify_time_ms": 0.21979200000000002,
+      "proof_size_bytes": 28272,
+      "num_wfa_states": 3,
+      "num_constraints": 6,
+      "trace_length": 8
+    },
+    {
+      "metric": "chrf",
+      "candidate_preview": "machine learning is great",
+      "reference_preview": "deep learning is wonderful",
+      "score": 0.35294117647058826,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": false,
+      "metric_bound": true,
+      "wfa_commitment": "8540a9925723d9b218266e71d656cc7b76083ed8fdab64382850f22c6885687a",
+      "prove_time_ms": 0.738916,
+      "verify_time_ms": 0.237542,
+      "proof_size_bytes": 29088,
+      "num_wfa_states": 5,
+      "num_constraints": 10,
+      "trace_length": 8
+    },
+    {
+      "metric": "chrf",
+      "candidate_preview": "Paris",
+      "reference_preview": "Paris",
+      "score": 1.0,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": true,
+      "metric_bound": true,
+      "wfa_commitment": "54c33f7ce06ff82a6ee6f6ace7bccd21964605cae68ff29bb755c8b2ef206a87",
+      "prove_time_ms": 0.43025,
+      "verify_time_ms": 0.19725,
+      "proof_size_bytes": 27864,
+      "num_wfa_states": 2,
+      "num_constraints": 4,
+      "trace_length": 8
+    },
+    {
+      "metric": "chrf",
+      "candidate_preview": "alpha beta gamma",
+      "reference_preview": "alpha gamma delta",
+      "score": 0.5454545454545455,
+      "proof_generated": true,
+      "proof_verified": true,
+      "triple_agreement": false,
+      "metric_bound": true,
+      "wfa_commitment": "5e32d8dd4f990dc76c9d9d36add1f73dccfc180f553ac97eb350e6e0e9996c27",
+      "prove_time_ms": 0.596417,
+      "verify_time_ms": 0.216583,
+      "proof_size_bytes": 28680,
+      "num_wfa_states": 4,
+      "num_constraints": 8,
+      "trace_length": 8
+    }
+  ],
+  "differential_test_results": {
+    "num_standard_pairs": 15,
+    "num_random_pairs": 200,
+    "per_metric": [
+      {
+        "metric": "exact_match",
+        "total_tests": 215,
+        "agreements": 215,
+        "disagreements": 0,
+        "agreement_rate": 1.0
+      },
+      {
+        "metric": "token_f1",
+        "total_tests": 215,
+        "agreements": 215,
+        "disagreements": 0,
+        "agreement_rate": 1.0
+      },
+      {
+        "metric": "bleu",
+        "total_tests": 215,
+        "agreements": 215,
+        "disagreements": 0,
+        "agreement_rate": 1.0
+      },
+      {
+        "metric": "rouge1",
+        "total_tests": 215,
+        "agreements": 215,
+        "disagreements": 0,
+        "agreement_rate": 1.0
+      },
+      {
+        "metric": "rouge_l",
+        "total_tests": 215,
+        "agreements": 215,
+        "disagreements": 0,
+        "agreement_rate": 1.0
+      }
+    ],
+    "total_checks": 1075,
+    "total_disagreements": 0
+  },
+  "timing": {
+    "total_ms": 7004.305834,
+    "corpus_generation_ms": 0.049249999999999995,
+    "triple_scoring_ms": 6966.131875,
+    "certification_ms": 22.684917,
+    "differential_testing_ms": 15.103625000000001,
+    "per_metric_ms": [
+      [
+        "exact_match",
+        6886.8476980000005
+      ],
+      [
+        "token_f1",
+        2.6387110000000007
+      ],
+      [
+        "bleu",
+        13.091831999999995
+      ],
+      [
+        "rouge1",
+        2.6877449999999996
+      ],
+      [
+        "rouge_l",
+        1.7501160000000004
+      ],
+      [
+        "chrf",
+        59.02537400000001
+      ]
+    ]
+  }
+}
