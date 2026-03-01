@@ -150,7 +150,7 @@ def main():
     for d in DATA:
         pgf_lines.append(f"{d['states']}\t{d['prove_ms']}\t{d['verify_ms']}\t{d['proof_bytes']}")
 
-    dat_path = os.path.join(os.path.dirname(__file__), "stark_scaling_pgfplots.dat")
+    dat_path = os.path.join(os.path.dirname(__file__), "..", "data", "stark_scaling_pgfplots.dat")
     with open(dat_path, "w") as f:
         f.write("\n".join(pgf_lines) + "\n")
     print(f"\nWrote {dat_path}")
@@ -220,7 +220,7 @@ def main():
         "honest_assessment": honest,
     }
 
-    json_path = os.path.join(os.path.dirname(__file__), "stark_scaling_2048_results.json")
+    json_path = os.path.join(os.path.dirname(__file__), "..", "data", "stark_scaling_2048_results.json")
     with open(json_path, "w") as f:
         json.dump(result, f, indent=2)
     print(f"Wrote {json_path}")

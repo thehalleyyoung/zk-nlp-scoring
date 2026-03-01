@@ -1,5 +1,5 @@
 [workspace]
-members = ["spectacles-core", "spectacles-cli", "spectacles-integration", "spectacles-examples"]
+members = ["crates/spectacles-core", "crates/spectacles-cli", "crates/spectacles-integration", "crates/spectacles-examples"]
 resolver = "2"
 
 [workspace.dependencies]

@@ -7,7 +7,7 @@ Spectacles compiles NLP metrics to weighted finite automata (WFA) over typed sem
 ## 30-Second Quickstart
 
 ```bash
-cd implementation && cargo build --release
+cargo build --release
 
 # End-to-end certified scoring: compute metric, generate STARK proof, verify it
 cargo run --release --bin e2e_certification
@@ -66,6 +66,6 @@ All results are deterministic with fixed random seeds. Toolchain: Rust 1.91.1, P
 
 ## Documentation
 
-- [Implementation README](implementation/README.md) — build, test, architecture
-- [API Reference](implementation/api.md) — implemented public types and functions
-- [Paper](implementation/tool_paper.pdf) — full paper with formal proofs and evaluation
+- [Architecture Guide](docs/ARCHITECTURE.md) — build, test, architecture
+- [API Reference](docs/api.md) — implemented public types and functions
+- [Paper](docs/paper/tool_paper.pdf) — full paper with formal proofs and evaluation

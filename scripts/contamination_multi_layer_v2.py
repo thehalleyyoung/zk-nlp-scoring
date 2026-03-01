@@ -329,6 +329,6 @@ def run_experiments():
 
 if __name__ == "__main__":
     results = run_experiments()
-    with open("contamination_multi_layer_v2.json", "w") as f:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "contamination_multi_layer_v2.json"), "w") as f:
         json.dump(results, f, indent=2)
     print(f"\nResults written to contamination_multi_layer_v2.json")

@@ -18,7 +18,7 @@ import os
 import math
 from datetime import datetime, timezone
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 
 def load_json(path):
     with open(os.path.join(BASE, path)) as f:

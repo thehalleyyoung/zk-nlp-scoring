@@ -17,7 +17,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_DIR"
 
 echo "=== Spectacles Reproducibility ==="
 echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -60,20 +61,20 @@ echo ""
 
 # 7. Contamination experiments
 echo "--- Contamination Detection ---"
-python3 contamination_expanded.py 2>&1 | tail -3
-python3 contamination_adversarial.py 2>&1 | tail -3
+python3 scripts/contamination_expanded.py 2>&1 | tail -3
+python3 scripts/contamination_adversarial.py 2>&1 | tail -3
 echo ""
 
 # 8. Ablation study
 echo "--- Ablation Study ---"
-python3 ablation_study.py 2>&1 | tail -2
+python3 scripts/ablation_study.py 2>&1 | tail -2
 echo ""
 
 # 9. Corpus analysis
 echo "--- Corpus Characterization ---"
-python3 corpus_analysis.py 2>&1 | tail -4
+python3 scripts/corpus_analysis.py 2>&1 | tail -4
 echo ""
 
 echo "=== All experiments complete ==="
 echo "Results files:"
-ls -la *.json 2>/dev/null | awk '{print "  "$NF": "$5" bytes"}'
+ls -la data/*.json 2>/dev/null | awk '{print "  "$NF": "$5" bytes"}'

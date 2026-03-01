@@ -29,14 +29,14 @@ cargo run --release --bin stark_scaling_2048
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| Compilation checks | **68,748 tests, 0 disagreements** | `compilation_correctness.json` |
-| Comprehensive benchmark | **1,230 checks across 6 metrics, 0 disagreements** | `comprehensive_benchmark_results.json` |
-| E2E certification proofs | **49 metric-bound STARK proofs** across 5 metrics | `comprehensive_benchmark_results.json` |
-| STARK proofs verified | **76 proofs** (4–1,024 states) | `stark_scaling_regression.json` |
+| Compilation checks | **68,748 tests, 0 disagreements** | `data/compilation_correctness.json` |
+| Comprehensive benchmark | **1,230 checks across 6 metrics, 0 disagreements** | `data/comprehensive_benchmark_results.json` |
+| E2E certification proofs | **49 metric-bound STARK proofs** across 5 metrics | `data/comprehensive_benchmark_results.json` |
+| STARK proofs verified | **76 proofs** (4–1,024 states) | `data/stark_scaling_regression.json` |
 | 400-state BLEU-4 target | **ACHIEVED**: 3.8s prove, 1.5ms verify | measured |
 | Max proven states | **1,024** (49.9s prove, 2.3ms verify) | measured |
 | WFA metric coverage | **21/31 metrics (67.7%) WFA-representable** | census table in paper |
-| Multi-layer contamination | **100% accuracy** (vs 83.3% n-gram-only) | `contamination_multi_layer_v2.json` |
+| Multi-layer contamination | **100% accuracy** (vs 83.3% n-gram-only) | `data/contamination_multi_layer_v2.json` |
 | Bugs found by verification | **2** (Montgomery reduction, Lagrange interpolation) | paper §7 |
 
 ## How It Works
@@ -84,7 +84,7 @@ Scaling model: prove_time = 0.009 × n^2.18 (R² = 0.989). Verification stays su
 ## Project Structure
 
 ```
-spectacles-core/src/
+crates/spectacles-core/src/
   pipeline.rs  — End-to-end metric certification with STARK proofs
   evalspec/    — EvalSpec DSL: parser, type checker, compiler, semantics
   wfa/         — Semirings, WFA operations, minimization, equivalence
@@ -92,7 +92,7 @@ spectacles-core/src/
   scoring/     — 7 metrics × 3 implementations, differential testing
   psi/         — OPRF-based PSI + multi-layer contamination detection
   protocol/    — Certificates, transcripts, model identity attestation
-spectacles-examples/src/bin/
+crates/spectacles-examples/src/bin/
   comprehensive_benchmark  — 205 pairs × 6 metrics + 25 STARK certifications
   compilation_correctness  — 68,748 triple-agreement checks
   stark_scaling_2048       — Scaling benchmark to 1,024 states
@@ -109,10 +109,10 @@ spectacles-examples/src/bin/
 
 ## Documentation
 
-- `tool_paper.pdf` — Full paper (41 pages)
-- `api.md` — API reference
-- `grounding.json` — Every paper claim mapped to evidence
-- `reproduce.sh` — Reproduce all experiments
+- `../docs/paper/tool_paper.pdf` — Full paper (41 pages)
+- `../docs/api.md` — API reference
+- `../data/grounding.json` — Every paper claim mapped to evidence
+- `../scripts/reproduce.sh` — Reproduce all experiments
 
 ## License
 

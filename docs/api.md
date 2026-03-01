@@ -97,7 +97,7 @@ a verified compiler in the CompCert/CakeML sense.
 
 ## Pipeline Module
 
-**Path:** `spectacles-core/src/pipeline.rs`
+**Path:** `crates/spectacles-core/src/pipeline.rs`
 
 End-to-end metric certification pipeline. Takes a metric name and (candidate, reference) pair, builds a metric-specific WFA, generates a STARK proof, and verifies it.
 
@@ -152,7 +152,7 @@ pub struct MetricCertificate {
 
 ## EvalSpec Module
 
-**Path:** `spectacles-core/src/evalspec/`
+**Path:** `crates/spectacles-core/src/evalspec/`
 
 The EvalSpec module provides a typed domain-specific language for specifying
 NLP evaluation metrics. It includes a parser, type checker, compiler to WFA,
@@ -489,7 +489,7 @@ definition:
 
 ## WFA Module
 
-**Path:** `spectacles-core/src/wfa/`
+**Path:** `crates/spectacles-core/src/wfa/`
 
 The WFA module implements a full weighted finite automaton engine parameterized
 over semiring types.
@@ -1061,7 +1061,7 @@ Verifies that a set of operations is closed under rational power series composit
 
 ## Circuit Module
 
-**Path:** `spectacles-core/src/circuit/`
+**Path:** `crates/spectacles-core/src/circuit/`
 
 The circuit module compiles WFAs into STARK proof circuits over the Goldilocks
 prime field.
@@ -1538,7 +1538,7 @@ for c in constraints {
 
 ## Protocol Module
 
-**Path:** `spectacles-core/src/protocol/`
+**Path:** `crates/spectacles-core/src/protocol/`
 
 The protocol module implements the commit-reveal-verify state machine,
 commitment schemes, Fiat-Shamir transcripts, and evaluation certificates.
@@ -2004,7 +2004,7 @@ Static methods for creating and verifying model identity commitments and transcr
 
 ## PSI Module
 
-**Path:** `spectacles-core/src/psi/`
+**Path:** `crates/spectacles-core/src/psi/`
 
 The PSI module implements Private Set Intersection for training data
 contamination detection.
@@ -2453,7 +2453,7 @@ Paraphrase detection via sparse embedding cosine similarity.
 
 ## Scoring Module
 
-**Path:** `spectacles-core/src/scoring/`
+**Path:** `crates/spectacles-core/src/scoring/`
 
 The scoring module implements 8 NLP evaluation metrics, each with a triple
 implementation pattern (reference, WFA, circuit).
@@ -3104,7 +3104,7 @@ println!(
 
 ## Utils Module
 
-**Path:** `spectacles-core/src/utils/`
+**Path:** `crates/spectacles-core/src/utils/`
 
 The utils module provides hashing, serialization, and mathematical utilities.
 

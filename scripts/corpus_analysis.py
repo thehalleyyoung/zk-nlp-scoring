@@ -12,7 +12,7 @@ import math
 from collections import Counter
 from datetime import datetime, timezone
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 
 WORDS = [
     "the", "cat", "sat", "on", "mat", "dog", "ran", "in",

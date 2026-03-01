@@ -19,7 +19,7 @@ import random
 from datetime import datetime, timezone
 from collections import Counter
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 
 def wilson_ci(k, n, alpha=0.05):
     """Wilson score confidence interval."""
