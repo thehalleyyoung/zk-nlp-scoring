@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  26 FEB 2026 07:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  2 MAR 2026 02:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -978,7 +978,7 @@ LaTeX Font Info:    Trying to load font information for U+stmry on input line 8
 {/usr/local/texlive/2025basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 
 [2]
-Overfull \hbox (8.68454pt too wide) in paragraph at lines 236--247
+Overfull \hbox (8.68454pt too wide) in paragraph at lines 228--239
 []\OT1/cmr/bx/n/10.95 Comprehensive em-pir-i-cal val-i-da-tion\OT1/cmr/m/n/10.9
 5 : 68,748 com-pi-la-tion checks (in-clud-ing 10,000 production-
  []
@@ -988,7 +988,7 @@ Overfull \hbox (8.68454pt too wide) in paragraph at lines 236--247
 [3]
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/sc' in size <10> not available
-(Font)              Font shape `OT1/cmr/m/sc' tried instead on input line 356.
+(Font)              Font shape `OT1/cmr/m/sc' tried instead on input line 348.
 
 
 
@@ -997,15 +997,15 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.417 
+l.409 
       
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.417 
+l.409 
       ]
-Overfull \hbox (13.11954pt too wide) in paragraph at lines 491--497
+Overfull \hbox (13.11954pt too wide) in paragraph at lines 483--489
 []\OT1/cmr/m/n/10.95 Formally, the state weight $\OML/cmm/m/it/10.95 s[]\OMS/cm
 sy/m/n/10.95 j[] \OT1/cmr/m/n/10.95 = \OMS/cmsy/m/n/10.95 ^^@ []fj\OML/cmm/m/it
 /10.95 S\OMS/cmsy/m/n/10.95 j \OT1/cmr/m/n/10.95 : \OML/cmm/m/it/10.95 S[]r[] [
@@ -1015,7 +1015,7 @@ sy/m/n/10.95 j[] \OT1/cmr/m/n/10.95 = \OMS/cmsy/m/n/10.95 ^^@ []fj\OML/cmm/m/it
 
 
 [5]
-Overfull \vbox (8.3085pt too high) detected at line 552
+Overfull \vbox (8.3085pt too high) detected at line 544
  []
 
 
@@ -1025,9 +1025,9 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.578 
+l.570 
       ]
-Overfull \hbox (0.83572pt too wide) in paragraph at lines 616--623
+Overfull \hbox (0.83572pt too wide) in paragraph at lines 608--615
  []\OT1/cmr/bx/n/10.95 Practical ap-pli-ca-tion.[] \OT1/cmr/m/n/10.95 Spec-i-fi
 -ca-tion equiv-a-lence dis-tin-guishes \OT1/cmr/m/it/10.95 in-ten-tional \OT1/c
 mr/m/n/10.95 met-ric vari-a-tions (e.g.,
@@ -1037,10 +1037,10 @@ mr/m/n/10.95 met-ric vari-a-tions (e.g.,
 
 [7]
 LaTeX Font Info:    Font shape `OT1/cmss/m/it' in size <10.95> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 670.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 662.
 
 
-Overfull \hbox (10.2438pt too wide) in paragraph at lines 755--773
+Overfull \hbox (10.2438pt too wide) in paragraph at lines 747--765
  [][] 
  []
 
@@ -1053,13 +1053,13 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.832 
+l.824 
       
 pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.832 
+l.824 
       ]
 
 [10
@@ -1067,7 +1067,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.900 \subsection
+l.892 \subsection
                  {STARK Proof Results}]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
@@ -1079,7 +1079,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.6}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.991 
+l.983 
       ]
 
 [12
@@ -1087,21 +1087,21 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.7}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1090 
+l.1082 
        
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1090 
+l.1082 
        ]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1100.
+(hyperref)                removing `math shift' on input line 1092.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1100.
+(hyperref)                removing `math shift' on input line 1092.
 
 
 
@@ -1110,13 +1110,13 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.8}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1153 
+l.1145 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.9}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1153 
+l.1145 
        ]
 
 [14
@@ -1124,15 +1124,15 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.10}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1246 \end{enumerate}
+l.1238 \end{enumerate}
                       
 pdfTeX warning (ext4): destination with the same identifier (name{table.11}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1246 \end{enumerate}
+l.1238 \end{enumerate}
                       ]
-Overfull \hbox (0.14525pt too wide) in paragraph at lines 1281--1286
+Overfull \hbox (0.14525pt too wide) in paragraph at lines 1273--1278
  []\OT1/cmr/bx/n/10.95 Decidable mem-ber-ship cri-te-rion.[] \OT1/cmr/m/n/10.95
  For com-mu-ta-tive semir-ings (Boolean, count-ing, Goldilocks),
  []
@@ -1144,16 +1144,16 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.12}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1333 \end{table}
+l.1325 \end{table}
                   ]
-Overfull \hbox (6.87384pt too wide) in paragraph at lines 1336--1343
+Overfull \hbox (6.87384pt too wide) in paragraph at lines 1328--1335
  []\OT1/cmr/bx/n/10.95 Hankel ra-tio-nal-ity test.[] \OT1/cmr/m/n/10.95 We im-p
 le-ment a con-struc-tive ra-tio-nal-ity test (\OT1/cmtt/m/n/10.95 HankelRationa
 lityTest\OT1/cmr/m/n/10.95 )
  []
 
 
-Overfull \hbox (5.71782pt too wide) in paragraph at lines 1367--1372
+Overfull \hbox (5.71782pt too wide) in paragraph at lines 1359--1364
 \OT1/cmr/m/n/10.95 ing, in-dexed via Min-Hash sig-na-tures and locality-sensiti
 ve hash-ing (LSH) for privacy-preserving
  []
@@ -1165,7 +1165,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.13}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1375 \end{enumerate}
+l.1367 \end{enumerate}
                       ]
 
 [17
@@ -1173,188 +1173,189 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.14}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1458 \item \textbf
+l.1450 \item \textbf
                     {Weight commitment}: A Merkle tree over model weight]
 
 [18]
 
 [19]
-Overfull \hbox (5.90765pt too wide) in paragraph at lines 1620--1623
-[]\OT1/cmr/bx/n/10.95 N5 (trop-i-cal Kleene star con-ver-gence)\OT1/cmr/m/n/10.
-95 : Proved by el-e-men-tary real anal-y-sis: $[][](\OML/cmm/m/it/10.95 na\OT1/
-cmr/m/n/10.95 ) =
- []
 
-
-Overfull \hbox (6.47945pt too wide) in paragraph at lines 1659--1665
+[20
+pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1673 
+       ]
+Overfull \hbox (6.47945pt too wide) in paragraph at lines 1725--1731
  []\OT1/cmr/bx/n/10.95 Contamination de-tec-tion scope.[] \OT1/cmr/m/n/10.95 Th
 e PSI-based check de-tects ver-ba-tim and lightly-paraphrased
  []
 
 
-Overfull \hbox (12.8251pt too wide) in paragraph at lines 1671--1685
+Overfull \hbox (12.8251pt too wide) in paragraph at lines 1737--1751
 \OT1/cmr/m/n/10.95 SQuAD, WMT trans-la-tion eval-u-a-tions, and Hu-manEval. Emb
 edding-based met-rics (BERTScore [[]]),
  []
 
 
 
-[20]
-
 [21]
 
 [22]
 
 [23]
+
+[24]
 LaTeX Font Info:    Trying to load font information for OMS+cmtt on input line 
-1973.
-LaTeX Font Info:    No file OMScmtt.fd. on input line 1973.
+2039.
+LaTeX Font Info:    No file OMScmtt.fd. on input line 2039.
 
 
 LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
 (Font)              using `OMS/cmsy/m/n' instead
-(Font)              for symbol `textbraceleft' on input line 1973.
+(Font)              for symbol `textbraceleft' on input line 2039.
 
 
 
-[24
+[25
 
 ]
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
-(Font)              using `OT1/cmr/m/sc' instead on input line 2061.
+(Font)              using `OT1/cmr/m/sc' instead on input line 2127.
 
 
 
-[25]
+[26]
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 2078.
+nput line 2144.
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 2079.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 2145.
 
 
 
-[26
+[27
 pdfTeX warning (ext4): destination with the same identifier (name{table.15}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.2132 
+l.2198 
        ]
-
-[27]
 
 [28]
 
 [29]
 
-[30
+[30]
+
+[31
 pdfTeX warning (ext4): destination with the same identifier (name{table.16}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.2457 \item $
+l.2523 \item $
               a \oplus b = b \oplus a$ (additive commutativity)]
 
-[31]
+[32]
 
-[32
+[33
 pdfTeX warning (ext4): destination with the same identifier (name{table.17}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.2618 \end{table}
+l.2684 \end{table}
                   ]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Underfull \hbox (badness 2351) in paragraph at lines 2704--2704
+Underfull \hbox (badness 2351) in paragraph at lines 2770--2770
 []\OT1/cmr/bx/n/10 Marginal Con-tri-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2706--2706
+Underfull \hbox (badness 10000) in paragraph at lines 2772--2772
 []\OT1/cmr/m/n/10 Triple verif.
  []
 
 
-Overfull \hbox (20.30876pt too wide) in paragraph at lines 2706--2706
+Overfull \hbox (20.30876pt too wide) in paragraph at lines 2772--2772
 \OT1/cmr/m/n/10 (ref+WFA+circuit)| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2707--2707
+Underfull \hbox (badness 10000) in paragraph at lines 2773--2773
 \OT1/cmr/m/n/10 (Mont-gomery con-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2707--2707
+Underfull \hbox (badness 10000) in paragraph at lines 2773--2773
 \OT1/cmr/m/n/10 stant, La-grange
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2712--2713
+Underfull \hbox (badness 10000) in paragraph at lines 2778--2779
 []\OT1/cmr/m/n/10 Mathematical cer-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2712--2713
+Underfull \hbox (badness 10000) in paragraph at lines 2778--2779
 \OT1/cmr/m/n/10 ax-ioms; machine-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2712--2713
+Underfull \hbox (badness 10000) in paragraph at lines 2778--2779
 \OT1/cmr/m/n/10 checked the-o-rem
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2718--2718
+Underfull \hbox (badness 10000) in paragraph at lines 2784--2784
 []\OT1/cmr/m/n/10 Adds ROUGE-L
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2722--2722
+Underfull \hbox (badness 10000) in paragraph at lines 2788--2788
 []\OT1/cmr/m/n/10 Contamination
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2723--2723
+Underfull \hbox (badness 10000) in paragraph at lines 2789--2789
 []\OT1/cmr/m/n/10 Privacy-preserving
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2723--2723
+Underfull \hbox (badness 10000) in paragraph at lines 2789--2789
 \OML/cmm/m/it/10 n$\OT1/cmr/m/n/10 -gram over-lap
  []
 
 
-Underfull \hbox (badness 2111) in paragraph at lines 2724--2726
+Underfull \hbox (badness 2111) in paragraph at lines 2790--2792
 \OT1/cmr/m/n/10 in-tegrity gap but is a proof-of-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2727--2727
+Underfull \hbox (badness 10000) in paragraph at lines 2793--2793
 []\OT1/cmr/m/n/10 Property-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2728--2728
+Underfull \hbox (badness 10000) in paragraph at lines 2794--2794
 []\OT1/cmr/m/n/10 9,839 struc-tured
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2728--2728
+Underfull \hbox (badness 10000) in paragraph at lines 2794--2794
 \OT1/cmr/m/n/10 ax-iom tests with
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2731--2731
+Underfull \hbox (badness 10000) in paragraph at lines 2797--2797
 []\OT1/cmr/m/n/10 WFA equiv-a-
  []
 
 
-Underfull \hbox (badness 7468) in paragraph at lines 2732--2732
+Underfull \hbox (badness 7468) in paragraph at lines 2798--2798
 []\OT1/cmr/m/n/10 Universal spec-i-fi-ca-
  []
 
@@ -1363,100 +1364,125 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 
 
-[33
+[34
 pdfTeX warning (ext4): destination with the same identifier (name{table.18}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.2754 \subsection
-                  {Routine Sorrys (12)}]
+l.2823 
+       ]
+Overfull \hbox (81.19673pt too wide) in paragraph at lines 2827--2831
+\OT1/cmr/m/it/10.95 Proof\OT1/cmr/m/n/10.95 : \OT1/cmtt/m/n/10.95 congr 1; exac
+t Nat.mul[]comm a.val b.val\OT1/cmr/m/n/10.95 . File: \OT1/cmtt/m/n/10.95 lean/
+Spectacles/Semiring/Goldilocks.lean\OT1/cmr/m/n/10.95 . 
+ []
 
-[34
+
+Overfull \hbox (167.96643pt too wide) in paragraph at lines 2837--2841
+\OT1/cmr/m/n/10.95 Bool/-Nat/ExtNat. \OT1/cmr/m/it/10.95 Proof\OT1/cmr/m/n/10.9
+5 : \OT1/cmtt/m/n/10.95 cases a <;> rfl \OT1/cmr/m/n/10.95 (Bool), \OT1/cmtt/m/
+n/10.95 Nat.add[]zero \OT1/cmr/m/n/10.95 (Nat). File: \OT1/cmtt/m/n/10.95 lean/
+Spectacles/Semiring/Instances.lean\OT1/cmr/m/n/10.95 . 
+ []
+
+
+Overfull \hbox (142.05646pt too wide) in paragraph at lines 2852--2856
+\OML/cmm/m/it/10.95 a \OMS/cmtt/m/n/10.95 ^^U \OT1/cmr/m/n/10.95 0$. \OT1/cmr/m
+/it/10.95 Proof\OT1/cmr/m/n/10.95 : Case anal-y-sis on ExtNat; $[](0\OML/cmm/m/
+it/10.95 ; a\OT1/cmr/m/n/10.95 ) = 0$ for $\OML/cmm/m/it/10.95 a \OMS/cmtt/m/n/
+10.95 ^^U \OT1/cmr/m/n/10.95 0$. File: \OT1/cmtt/m/n/10.95 lean/Spectacles/Semi
+ring/KleeneSemiring.lean\OT1/cmr/m/n/10.95 . 
+ []
+
+
+
+[35
 pdfTeX warning (ext4): destination with the same identifier (name{table.19}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.2789 
-       ]
-
-[35
-pdfTeX warning (ext4): destination with the same identifier (name{table.20}) ha
-s been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.2833 
-       ]
-Underfull \hbox (badness 10000) in paragraph at lines 2879--2879
-[]\OT1/cmr/bx/n/10 Rust Im-ple-men-ta-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2881--2881
-[]\OT1/cmtt/m/n/10 class
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2882--2882
-[]\OT1/cmtt/m/n/10 impl Semiring for
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2883--2883
-[]\OT1/cmtt/m/n/10 impl Semiring for
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2884--2884
-[]\OT1/cmtt/m/n/10 instance
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2887--2887
-[]\OT1/cmtt/m/n/10 theorem
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2888--2888
-[]\OT1/cmtt/m/n/10 theorem
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2888--2888
-[]\OT1/cmtt/m/n/10 compile[]gadget[]
- []
-
-
-Overfull \hbox (11.45087pt too wide) in paragraph at lines 2889--2889
-[]\OT1/cmtt/m/n/10 wfa[]equiv[]decidable| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 2889--2889
-[]\OT1/cmtt/m/n/10 WFAEquivalence
+l.2856 \end{enumerate}
+                      ]
+Overfull \hbox (153.01985pt too wide) in paragraph at lines 2891--2898
+\OT1/cmtt/m/n/10.95 Semiring/\OMS/cmtt/m/n/10.95 f\OT1/cmtt/m/n/10.95 Basic,Ins
+tances,Goldilocks,Embedding,KleeneSemiring\OMS/cmtt/m/n/10.95 g\OT1/cmtt/m/n/10
+.95 .lean\OT1/cmr/m/n/10.95 , \OT1/cmtt/m/n/10.95 WFA/\OMS/cmtt/m/n/10.95 f\OT1
+/cmtt/m/n/10.95 Basic,Evaluation,Minimization\OMS/cmtt/m/n/10.95 g\OT1/cmtt/m/n
+/10.95 .lean\OT1/cmr/m/n/10.95 ,
  []
 
 
 
 [36
-pdfTeX warning (ext4): destination with the same identifier (name{table.21}) ha
+pdfTeX warning (ext4): destination with the same identifier (name{table.20}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.2898 
        ]
+Underfull \hbox (badness 10000) in paragraph at lines 2905--2905
+[]\OT1/cmr/bx/n/10 Rust Im-ple-men-ta-
+ []
 
-[37]
 
-[38]
+Underfull \hbox (badness 10000) in paragraph at lines 2907--2907
+[]\OT1/cmtt/m/n/10 class
+ []
 
-[39
-pdfTeX warning (ext4): destination with the same identifier (name{table.22}) ha
+
+Underfull \hbox (badness 10000) in paragraph at lines 2908--2908
+[]\OT1/cmtt/m/n/10 impl Semiring for
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2909--2909
+[]\OT1/cmtt/m/n/10 impl Semiring for
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2910--2910
+[]\OT1/cmtt/m/n/10 instance
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2913--2913
+[]\OT1/cmtt/m/n/10 theorem
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2914--2914
+[]\OT1/cmtt/m/n/10 theorem
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2914--2914
+[]\OT1/cmtt/m/n/10 compile[]gadget[]
+ []
+
+
+Overfull \hbox (11.45087pt too wide) in paragraph at lines 2915--2915
+[]\OT1/cmtt/m/n/10 wfa[]equiv[]decidable| 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2915--2915
+[]\OT1/cmtt/m/n/10 WFAEquivalence
+ []
+
+
+
+[37
+pdfTeX warning (ext4): destination with the same identifier (name{table.21}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.3154 \item 6
-              8{,}748 triple-agreement tests where the full metric]
-Overfull \hbox (66.4914pt too wide) in paragraph at lines 3157--3160
+l.2963 ...n{theorem}[Aggregation compositionality]
+                                                  \label{thm:composition}]
+
+[38]
+
+[39]
+Overfull \hbox (66.4914pt too wide) in paragraph at lines 3183--3186
 []\OT1/cmr/m/n/10.95 algebraic au-dit: each ag-gre-ga-tion func-tion is a com-p
 o-si-tion of el-e-men-tary op-er-a-tions ($+\OML/cmm/m/it/10.95 ; \OMS/cmtt/m/n
 /10.95 ^^@\OML/cmm/m/it/10.95 ; \OMS/cmtt/m/n/10.95 ^^B\OML/cmm/m/it/10.95 ; =;
@@ -1465,7 +1491,13 @@ o-si-tion of el-e-men-tary op-er-a-tions ($+\OML/cmm/m/it/10.95 ; \OMS/cmtt/m/n
 
 
 
-[40]
+[40
+pdfTeX warning (ext4): destination with the same identifier (name{table.22}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.3209 \item \textbf
+                    {Tier~2 (gadget-assisted)}: Each tropical $\min$ requires]
 
 [41] (./tool_paper.aux)
  ***********
@@ -1477,13 +1509,13 @@ L3 programming layer <2025-01-18>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `tool_paper.out' has not changed.
-(rerunfilecheck)             Checksum: 99CB3B0228EB00EB342ECDBE8B1C4551;10383.
+(rerunfilecheck)             Checksum: 00650F7C90B6DA97CA9E97B4E48F39B4;10472.
  ) 
 Here is how much of TeX's memory you used:
- 35613 strings out of 474662
- 811664 string characters out of 5751110
+ 35676 strings out of 474662
+ 812614 string characters out of 5751110
  1411127 words of memory out of 5000000
- 57752 multiletter control sequences out of 15000+600000
+ 57806 multiletter control sequences out of 15000+600000
  582222 words of font info for 124 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  84i,19n,87p,731b,2604s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1520,10 +1552,10 @@ ic/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/local/texliv
 e/2025basic/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/loc
 al/texlive/2025basic/texmf-dist/fonts/type1/public/stmaryrd/stmary10.pfb></usr/
 local/texlive/2025basic/texmf-dist/fonts/type1/public/stmaryrd/stmary8.pfb>
-Output written on tool_paper.pdf (41 pages, 504851 bytes).
+Output written on tool_paper.pdf (41 pages, 505763 bytes).
 PDF statistics:
- 1070 PDF objects out of 1200 (max. 8388607)
- 954 compressed objects within 10 object streams
- 341 named destinations out of 1000 (max. 500000)
- 501 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1082 PDF objects out of 1200 (max. 8388607)
+ 966 compressed objects within 10 object streams
+ 350 named destinations out of 1000 (max. 500000)
+ 509 words of extra memory for PDF output out of 10000 (max. 10000000)
 

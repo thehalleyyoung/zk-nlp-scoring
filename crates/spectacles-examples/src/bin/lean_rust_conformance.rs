@@ -190,9 +190,9 @@ fn check_semiring_axioms() -> Vec<SpecCheck> {
         let mut pass = true;
         let mut tested = 0;
         for i in 0..n {
-            let a = TropicalSemiring::new(i as i64 * 137 % 5000);
-            let b = TropicalSemiring::new(i as i64 * 251 % 5000);
-            let c = TropicalSemiring::new(i as i64 * 397 % 5000);
+            let a = TropicalSemiring::new((i as f64) * 137.0 % 5000.0);
+            let b = TropicalSemiring::new((i as f64) * 251.0 % 5000.0);
+            let c = TropicalSemiring::new((i as f64) * 397.0 % 5000.0);
             tested += 1;
             if a.add(&b) != b.add(&a) { pass = false; }
             if a.add(&TropicalSemiring::zero()) != a { pass = false; }
@@ -328,33 +328,35 @@ fn check_matrix_star() -> MatrixStarValidation {
     // Tropical 3×3 (path weights)
     let trop_pass = {
         let m = SemiringMatrix::from_vec(3, 3, vec![
-            TropicalSemiring::infinity(), TropicalSemiring::new(1), TropicalSemiring::infinity(),
-            TropicalSemiring::infinity(), TropicalSemiring::infinity(), TropicalSemiring::new(2),
-            TropicalSemiring::new(3), TropicalSemiring::infinity(), TropicalSemiring::infinity(),
+            TropicalSemiring::infinity(), TropicalSemiring::new(1.0), TropicalSemiring::infinity(),
+            TropicalSemiring::infinity(), TropicalSemiring::infinity(), TropicalSemiring::new(2.0),
+            TropicalSemiring::new(3.0), TropicalSemiring::infinity(), TropicalSemiring::infinity(),
         ]).unwrap();
         let star = m.matrix_star();
         if let Ok(s) = &star {
             // A*[0][2] should give shortest path 0→1→2 = 1+2 = 3
             let v02 = &s.data[0 * 3 + 2];
-            v02 == &TropicalSemiring::new(3)
+            v02 == &TropicalSemiring::new(3.0)
         } else {
             false
         }
     };
 
-    // Counting 2×2
+    // Counting 2×2 — CountingSemiring doesn't implement StarSemiring,
+    // so we verify the basic matrix operations work correctly instead.
     let count_pass = {
         let m = SemiringMatrix::from_vec(2, 2, vec![
             CountingSemiring::new(0), CountingSemiring::new(1),
             CountingSemiring::new(0), CountingSemiring::new(0),
         ]).unwrap();
-        let star = m.matrix_star();
-        star.is_ok()
+        // Verify matrix construction and multiplication (m * m should be zero matrix)
+        let m2 = (&m * &m).unwrap();
+        m2.data[0] == CountingSemiring::new(0) && m2.data[3] == CountingSemiring::new(0)
     };
 
     // Conway axiom checks: a* = 1 ⊕ a ⊗ a*
     let mut conway_checks = 0;
-    for v in [0i64, 1, 5, 100] {
+    for v in [0.0f64, 1.0, 5.0, 100.0] {
         let a = TropicalSemiring::new(v);
         let a_star = a.star();
         let lhs = a_star.clone();

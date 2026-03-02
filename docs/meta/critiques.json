@@ -1,0 +1,53 @@
+{
+  "project": "spectacles-wfa-zk-scoring-circuits",
+  "title": "Spectacles: Machine-Checkable Proofs for NLP Benchmark Scoring",
+  "synthesis_date": "2026-03-02",
+  "average_score": 6.67,
+  "score_range": [6, 7],
+  "reviewers": [
+    {
+      "name": "Cesar Sanchez",
+      "persona": "formal_verification_AI_researcher",
+      "score": 6,
+      "key_strength": "Novel grounding in Schützenberger's rational power series provides principled characterization of WFA-representable metrics.",
+      "key_weakness": "The 15 Lean sorrys and unverified Lean-to-Rust gap fundamentally undermine the machine-checkable correctness claim.",
+      "review_file": "review_cesar_sanchez.md"
+    },
+    {
+      "name": "Roderick Bloem",
+      "persona": "machine_learning_specification_safety_researcher",
+      "score": 7,
+      "key_strength": "Addresses a genuine gap in ML evaluation integrity with a practical, deployable STARK proof pipeline.",
+      "key_weakness": "Specification fidelity—whether the WFA formalization captures practitioner-intended metric semantics—is assumed rather than verified.",
+      "review_file": "review_roderick_bloem.md"
+    },
+    {
+      "name": "Vasco Vasconcelos",
+      "persona": "probabilistic_models_and_formal_methods_expert",
+      "score": 7,
+      "key_strength": "Elegant typed semiring abstraction unifies diverse NLP metrics under a single algebraic compilation framework.",
+      "key_weakness": "The denotational-to-operational semantics gap between Lean specification and Rust engine is tested but not formally proven.",
+      "review_file": "review_vasco_vasconcelos.md"
+    }
+  ],
+  "consensus_strengths": [
+    "Novel and principled application of Schützenberger's rational power series theory to characterize WFA-representable NLP metrics",
+    "Practical STARK proof performance (270 KiB proofs, 1.5ms verification) demonstrates real-world deployability",
+    "Bug-finding during formalization validates the safety value of formal specification even before verification is complete",
+    "Honest and theoretically grounded coverage analysis (21/31 metrics) derived from algebraic properties rather than ad hoc arguments"
+  ],
+  "consensus_weaknesses": [
+    "The 15 remaining Lean sorrys leave the formalization incomplete and potentially unsound, undermining the machine-checkable claim",
+    "The Lean-to-Rust compilation gap is validated only by differential testing, not by verified extraction or a machine-checked adequacy theorem",
+    "STARK proofs certify circuit execution fidelity, not metric correctness—the distinction is insufficiently acknowledged",
+    "Specification fidelity to practitioner-intended metric semantics is assumed rather than systematically validated against variant ambiguity",
+    "O(n²) STARK scaling and 33% metric non-coverage limit practical applicability to short-sequence, string-matching-only evaluation scenarios"
+  ],
+  "actionable_recommendations": [
+    "Categorize and discharge the 15 Lean sorrys, prioritizing those on the critical path for end-to-end correctness theorems",
+    "Close the Lean-to-Rust gap via verified extraction (e.g., Lean 4 native code generation or a machine-checked bisimulation between the specification and engine)",
+    "Articulate a precise trust model that distinguishes circuit execution fidelity, WFA compilation correctness, specification correspondence, and specification intent",
+    "Address specification ambiguity by parameterizing Lean specifications over metric variant choices and validating against multiple reference implementations",
+    "Investigate recursive STARK composition and weighted pushdown automata to address scaling limitations and extend coverage beyond rational power series"
+  ]
+}
