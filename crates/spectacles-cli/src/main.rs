@@ -227,18 +227,22 @@ fn emit_rows(rows: &[ScoreRow], format: OutputFormat) {
 }
 
 /// Load scoring pairs from a file, auto-detecting format by extension.
-/// Supports: .json (array), .jsonl (one JSON object per line), .csv (reference,hypothesis columns).
+/// Supports: .json (array, HuggingFace datasets, SQuAD), .jsonl, .csv, .tsv.
 fn load_pairs(path: &str) -> Result<Vec<ScoringPair>, String> {
     let content = fs::read_to_string(path)
         .map_err(|e| format!("Failed to read {}: {}", path, e))?;
 
     if path.ends_with(".csv") {
         load_pairs_csv(&content)
+    } else if path.ends_with(".tsv") {
+        load_pairs_tsv(&content)
     } else if path.ends_with(".jsonl") {
         load_pairs_jsonl(&content)
     } else {
-        // Default: try JSON array first, fall back to JSONL
+        // Try JSON: ScoringPair array, HuggingFace datasets, SQuAD, then JSONL fallback
         serde_json::from_str::<Vec<ScoringPair>>(&content)
+            .or_else(|_| load_pairs_hf_json(&content))
+            .or_else(|_| load_pairs_squad_json(&content))
             .or_else(|_| load_pairs_jsonl(&content))
             .map_err(|e| format!("Failed to parse input as JSON or JSONL: {}", e))
     }
@@ -281,9 +285,138 @@ fn load_pairs_jsonl(content: &str) -> Result<Vec<ScoringPair>, String> {
         .enumerate()
         .map(|(i, line)| {
             serde_json::from_str::<ScoringPair>(line)
+                .or_else(|_| hf_object_to_pair(
+                    &serde_json::from_str::<serde_json::Value>(line)
+                        .map_err(|e| format!("JSONL parse error on line {}: {}", i + 1, e))?
+                ).ok_or_else(|| format!("JSONL line {} missing reference/candidate fields", i + 1)))
                 .map_err(|e| format!("JSONL parse error on line {}: {}", i + 1, e))
         })
         .collect()
+}
+
+/// Extract a ScoringPair from a JSON object with HuggingFace-style field names.
+/// Supports: reference/label/target → reference, candidate/prediction/generated/hypothesis → candidate.
+fn hf_object_to_pair(obj: &serde_json::Value) -> Option<ScoringPair> {
+    let map = obj.as_object()?;
+    let reference = ["reference", "ref", "label", "target"]
+        .iter()
+        .find_map(|k| map.get(*k).and_then(|v| v.as_str()))?
+        .to_string();
+    let candidate = ["candidate", "hypothesis", "hyp", "prediction", "generated"]
+        .iter()
+        .find_map(|k| map.get(*k).and_then(|v| v.as_str()))?
+        .to_string();
+    Some(ScoringPair { candidate, reference })
+}
+
+/// Load pairs from HuggingFace datasets JSON format.
+/// Accepts `{"data": [...]}` or a bare array of objects with flexible field names.
+fn load_pairs_hf_json(content: &str) -> Result<Vec<ScoringPair>, String> {
+    let value: serde_json::Value = serde_json::from_str(content)
+        .map_err(|e| format!("JSON parse error: {}", e))?;
+
+    let items = if let Some(arr) = value.as_array() {
+        arr.clone()
+    } else if let Some(obj) = value.as_object() {
+        obj.get("data")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .ok_or_else(|| "Expected 'data' array in HF dataset JSON".to_string())?
+    } else {
+        return Err("Expected JSON array or object with 'data' key".to_string());
+    };
+
+    items.iter()
+        .enumerate()
+        .map(|(i, item)| {
+            hf_object_to_pair(item)
+                .ok_or_else(|| format!("HF JSON item {} missing reference/candidate fields", i))
+        })
+        .collect()
+}
+
+/// Load pairs from SQuAD-style JSON: `{"data": [{"paragraphs": [{"qas": [...]}]}]}`.
+/// Extracts (reference=first answer text, candidate=question) pairs.
+fn load_pairs_squad_json(content: &str) -> Result<Vec<ScoringPair>, String> {
+    let value: serde_json::Value = serde_json::from_str(content)
+        .map_err(|e| format!("JSON parse error: {}", e))?;
+
+    let data = value.get("data")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| "SQuAD JSON must have a 'data' array".to_string())?;
+
+    let mut pairs = Vec::new();
+    for article in data {
+        let paragraphs = article.get("paragraphs")
+            .and_then(|v| v.as_array())
+            .ok_or_else(|| "SQuAD article missing 'paragraphs'".to_string())?;
+        for para in paragraphs {
+            let qas = para.get("qas")
+                .and_then(|v| v.as_array())
+                .ok_or_else(|| "SQuAD paragraph missing 'qas'".to_string())?;
+            for qa in qas {
+                let question = qa.get("question")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let answer = qa.get("answers")
+                    .and_then(|v| v.as_array())
+                    .and_then(|arr| arr.first())
+                    .and_then(|a| a.get("text"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                // Use prediction field if present (for evaluated SQuAD), else question
+                let candidate = qa.get("prediction")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or(&question)
+                    .to_string();
+                pairs.push(ScoringPair { candidate, reference: answer });
+            }
+        }
+    }
+
+    if pairs.is_empty() {
+        return Err("No QA pairs found in SQuAD JSON".to_string());
+    }
+    Ok(pairs)
+}
+
+/// Load pairs from TSV (tab-separated values): reference\tcandidate per line.
+fn load_pairs_tsv(content: &str) -> Result<Vec<ScoringPair>, String> {
+    let mut lines = content.lines().filter(|l| !l.trim().is_empty());
+
+    // Check if first line is a header
+    let first = lines.next().ok_or_else(|| "TSV file is empty".to_string())?;
+    let mut pairs = Vec::new();
+    let first_parts: Vec<&str> = first.split('\t').collect();
+
+    let is_header = first_parts.len() >= 2 && {
+        let a = first_parts[0].trim().to_lowercase();
+        let b = first_parts[1].trim().to_lowercase();
+        ["reference", "ref", "label", "target"].contains(&a.as_str())
+            && ["hypothesis", "candidate", "hyp", "prediction", "generated"].contains(&b.as_str())
+    };
+
+    if !is_header {
+        if first_parts.len() >= 2 {
+            pairs.push(ScoringPair {
+                reference: first_parts[0].to_string(),
+                candidate: first_parts[1].to_string(),
+            });
+        }
+    }
+
+    for line in lines {
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() >= 2 {
+            pairs.push(ScoringPair {
+                reference: parts[0].to_string(),
+                candidate: parts[1].to_string(),
+            });
+        }
+    }
+    Ok(pairs)
 }
 
 /// CLI entry point
@@ -334,7 +467,7 @@ fn print_usage() {
     println!();
     println!("COMMANDS:");
     println!("  score              Score a candidate against a reference");
-    println!("  batch-score        Score multiple pairs from a file (JSON, JSONL, CSV)");
+    println!("  batch-score        Score multiple pairs from a file (JSON, JSONL, CSV, TSV, HF datasets, SQuAD)");
     println!("  differential-test  Run differential tests across implementations");
     println!("  compile-circuit    Compile a scoring metric to an arithmetic circuit");
     println!("  estimate-size      Estimate proof size for a configuration");
@@ -351,7 +484,7 @@ fn print_usage() {
     println!("  --output-format    Output format: text (default), json, csv, markdown");
     println!();
     println!("BATCH-SCORE OPTIONS:");
-    println!("  --input, -i        Input file (JSON array, JSONL, or CSV with reference,hypothesis columns)");
+    println!("  --input, -i        Input file (JSON, JSONL, CSV, TSV, HF datasets, or SQuAD format)");
     println!("  --metric, -m       Single metric name");
     println!("  --metrics          Comma-separated metric list (e.g. exact_match,bleu,rouge_1)");
     println!("  --output-format    Output format: text (default), json, csv, markdown");

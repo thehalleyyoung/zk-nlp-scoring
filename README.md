@@ -157,7 +157,7 @@ spectacles-cli score -m exact_match -c "yes" -r "Yes" --triple
 
 ### `batch-score`
 
-Score multiple pairs from a file. Supports JSON, JSONL, and CSV inputs.
+Score multiple pairs from a file. Supports JSON, JSONL, CSV, TSV, HuggingFace datasets, and SQuAD format inputs.
 
 ```bash
 spectacles-cli batch-score [OPTIONS]
@@ -165,7 +165,7 @@ spectacles-cli batch-score [OPTIONS]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--input` | `-i` | Input file path. **Required.** Format auto-detected by extension. |
+| `--input` | `-i` | Input file path. **Required.** Format auto-detected by extension (`.json`, `.jsonl`, `.csv`, `.tsv`). JSON content is further auto-detected (HF datasets, SQuAD). |
 | `--metric` | `-m` | Single metric name. |
 | `--metrics` / `--metric-list` | | Comma-separated list of metrics (e.g. `exact_match,bleu,rouge_1`). |
 | `--output-format` | | Output format: `text` (default), `json`, `csv`, `markdown`. |
@@ -288,8 +288,11 @@ The `batch-score` command auto-detects format by file extension:
 | Extension | Format | Description |
 |-----------|--------|-------------|
 | `.json` | JSON array | Array of objects: `[{"candidate": "...", "reference": "..."}, ...]` |
+| `.json` | HuggingFace datasets | `{"data": [...]}` or array with `label`/`target`/`prediction`/`generated` fields |
+| `.json` | SQuAD | `{"data": [{"paragraphs": [{"qas": [...]}]}]}` — extracts answer/prediction pairs |
 | `.jsonl` | JSON Lines | One JSON object per line: `{"candidate": "...", "reference": "..."}` |
 | `.csv` | CSV | Header row with `reference` and `hypothesis` (or `candidate`) columns |
+| `.tsv` | TSV | Tab-separated `reference\thyypothesis` (header optional) |
 
 **CSV example:**
 
@@ -300,8 +303,8 @@ hello world,hello there
 ```
 
 Column names are case-insensitive. Accepted column names:
-- Reference: `reference`, `ref`
-- Hypothesis: `hypothesis`, `candidate`, `hyp`
+- Reference: `reference`, `ref`, `label`, `target`
+- Hypothesis: `hypothesis`, `candidate`, `hyp`, `prediction`, `generated`
 
 **JSONL example:**
 
@@ -309,6 +312,45 @@ Column names are case-insensitive. Accepted column names:
 {"candidate": "the cat sat", "reference": "the cat sat on the mat"}
 {"candidate": "hello there", "reference": "hello world"}
 ```
+
+**HuggingFace datasets example:**
+
+```json
+{"data": [
+  {"label": "the cat sat on the mat", "prediction": "the cat sat"},
+  {"target": "hello world", "generated": "hello there"}
+]}
+```
+
+Or as a bare JSON array with alternative field names:
+
+```json
+[
+  {"label": "the cat sat on the mat", "prediction": "the cat sat"}
+]
+```
+
+**SQuAD-style example:**
+
+```json
+{"data": [{"paragraphs": [{"qas": [
+  {"question": "Where is the cat?", "answers": [{"text": "on the mat"}], "id": "q1"}
+]}]}]}
+```
+
+SQuAD pairs use the first answer text as reference. If a `prediction` field is
+present on the QA object, it is used as the candidate; otherwise the question is used.
+
+**TSV example:**
+
+```
+reference	hypothesis
+the cat sat on the mat	the cat sat
+hello world	hello there
+```
+
+If the first line contains recognized header names it is skipped; otherwise it
+is treated as data.
 
 ### Output Formats
 

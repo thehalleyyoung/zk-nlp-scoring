@@ -2492,6 +2492,17 @@ pub struct ScoringPair {
 }
 ```
 
+The CLI `batch-score` command auto-constructs `ScoringPair` values from multiple
+input formats:
+
+| Format | Extension | Field mapping |
+|--------|-----------|---------------|
+| JSON / JSONL | `.json`, `.jsonl` | `candidate` + `reference` fields |
+| HuggingFace datasets | `.json` | `prediction`/`generated` → candidate; `label`/`target` → reference |
+| SQuAD | `.json` | First answer text → reference; `prediction` field (or question) → candidate |
+| CSV | `.csv` | `hypothesis`/`candidate` column → candidate; `reference`/`ref` column → reference |
+| TSV | `.tsv` | Tab-separated: first column → reference, second → candidate |
+
 #### `MultiRefScoringPair`
 
 ```rust
