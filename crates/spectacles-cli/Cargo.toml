@@ -11,3 +11,5 @@ tokio = { workspace = true }
 anyhow = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
+csv = "1"
+hex = { workspace = true }

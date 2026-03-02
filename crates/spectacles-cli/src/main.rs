@@ -1,25 +1,25 @@
 //! Spectacles CLI - command-line interface for the Spectacles framework.
 //!
-//! Subcommands: score, differential-test, compile-circuit, estimate-size, batch-score
+//! Subcommands: score, batch-score, differential-test, compile-circuit,
+//!              estimate-size, hash, verify-proof
 
-use std::path::PathBuf;
 use std::fs;
 use spectacles_core::scoring::{
     self, ScoringPair, TripleMetric,
     exact_match::ExactMatchScorer,
     token_f1::TokenF1Scorer,
-    bleu::{BleuScorer, BleuConfig, SmoothingMethod},
+    bleu::{BleuScorer, SmoothingMethod},
     rouge::{RougeNScorer, RougeLScorer},
     differential::{DifferentialTester, standard_test_suite, random_test_pairs},
 };
 use spectacles_core::utils::{
     hash::SpectaclesHasher,
-    serialization::{ProofSerializer, ProofFormat, CompactProof, estimate_proof_size},
-    math,
+    serialization::{CompactProof, ProofHeader, estimate_proof_size},
 };
+use serde::{Serialize, Deserialize};
 
 /// Available metrics
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MetricType {
     ExactMatch,
     TokenF1,
@@ -35,9 +35,9 @@ impl MetricType {
             "exact_match" | "exact-match" | "em" => Some(Self::ExactMatch),
             "token_f1" | "token-f1" | "f1" => Some(Self::TokenF1),
             "bleu" => Some(Self::Bleu),
-            "rouge1" | "rouge-1" => Some(Self::Rouge1),
-            "rouge2" | "rouge-2" => Some(Self::Rouge2),
-            "rougel" | "rouge-l" => Some(Self::RougeL),
+            "rouge1" | "rouge-1" | "rouge_1" => Some(Self::Rouge1),
+            "rouge2" | "rouge-2" | "rouge_2" => Some(Self::Rouge2),
+            "rougel" | "rouge-l" | "rouge_l" => Some(Self::RougeL),
             _ => None,
         }
     }
@@ -45,6 +45,245 @@ impl MetricType {
     fn all() -> Vec<&'static str> {
         vec!["exact_match", "token_f1", "bleu", "rouge1", "rouge2", "rougel"]
     }
+
+    fn name(&self) -> &'static str {
+        match self {
+            Self::ExactMatch => "exact_match",
+            Self::TokenF1 => "token_f1",
+            Self::Bleu => "bleu",
+            Self::Rouge1 => "rouge1",
+            Self::Rouge2 => "rouge2",
+            Self::RougeL => "rougel",
+        }
+    }
+}
+
+/// Output format for score/batch-score commands
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OutputFormat {
+    Text,
+    Json,
+    Csv,
+    Markdown,
+}
+
+impl OutputFormat {
+    fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "text" | "txt" => Some(Self::Text),
+            "json" => Some(Self::Json),
+            "csv" => Some(Self::Csv),
+            "markdown" | "md" | "markdown-table" => Some(Self::Markdown),
+            _ => None,
+        }
+    }
+}
+
+/// A single score result row for structured output
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ScoreRow {
+    metric: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    index: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    candidate: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reference: Option<String>,
+    score: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    precision: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    recall: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    brevity_penalty: Option<f64>,
+}
+
+/// Parse a comma-separated list of metrics
+fn parse_metrics(s: &str) -> Result<Vec<MetricType>, String> {
+    s.split(',')
+        .map(|m| {
+            MetricType::from_str(m.trim())
+                .ok_or_else(|| format!("Unknown metric: '{}'. Available: {:?}", m.trim(), MetricType::all()))
+        })
+        .collect()
+}
+
+/// Score a single pair with a given metric, returning a ScoreRow
+fn score_pair(metric: MetricType, pair: &ScoringPair) -> ScoreRow {
+    match metric {
+        MetricType::ExactMatch => {
+            let scorer = ExactMatchScorer::case_insensitive();
+            let s = scorer.score_reference(pair);
+            ScoreRow {
+                metric: metric.name().to_string(),
+                index: None, candidate: None, reference: None,
+                score: if s { 1.0 } else { 0.0 },
+                precision: None, recall: None, brevity_penalty: None,
+            }
+        }
+        MetricType::TokenF1 => {
+            let scorer = TokenF1Scorer::default_scorer();
+            let s = scorer.score_reference(pair);
+            ScoreRow {
+                metric: metric.name().to_string(),
+                index: None, candidate: None, reference: None,
+                score: s.f1,
+                precision: Some(s.precision), recall: Some(s.recall),
+                brevity_penalty: None,
+            }
+        }
+        MetricType::Bleu => {
+            let scorer = BleuScorer::with_smoothing(SmoothingMethod::Add1);
+            let s = scorer.score_reference(pair);
+            ScoreRow {
+                metric: metric.name().to_string(),
+                index: None, candidate: None, reference: None,
+                score: s.score,
+                precision: None, recall: None,
+                brevity_penalty: Some(s.brevity_penalty),
+            }
+        }
+        MetricType::Rouge1 => {
+            let scorer = RougeNScorer::rouge1();
+            let s = scorer.score_reference(pair);
+            ScoreRow {
+                metric: metric.name().to_string(),
+                index: None, candidate: None, reference: None,
+                score: s.f1,
+                precision: Some(s.precision), recall: Some(s.recall),
+                brevity_penalty: None,
+            }
+        }
+        MetricType::Rouge2 => {
+            let scorer = RougeNScorer::rouge2();
+            let s = scorer.score_reference(pair);
+            ScoreRow {
+                metric: metric.name().to_string(),
+                index: None, candidate: None, reference: None,
+                score: s.f1,
+                precision: Some(s.precision), recall: Some(s.recall),
+                brevity_penalty: None,
+            }
+        }
+        MetricType::RougeL => {
+            let scorer = RougeLScorer::default_scorer();
+            let s = scorer.score_reference(pair);
+            ScoreRow {
+                metric: metric.name().to_string(),
+                index: None, candidate: None, reference: None,
+                score: s.f1,
+                precision: Some(s.precision), recall: Some(s.recall),
+                brevity_penalty: None,
+            }
+        }
+    }
+}
+
+/// Emit score rows in the chosen output format
+fn emit_rows(rows: &[ScoreRow], format: OutputFormat) {
+    match format {
+        OutputFormat::Text => {
+            for row in rows {
+                let idx = row.index.map(|i| format!("[{}] ", i)).unwrap_or_default();
+                let mut parts = vec![format!("{}{}  score={:.4}", idx, row.metric, row.score)];
+                if let Some(p) = row.precision { parts.push(format!("P={:.4}", p)); }
+                if let Some(r) = row.recall { parts.push(format!("R={:.4}", r)); }
+                if let Some(bp) = row.brevity_penalty { parts.push(format!("BP={:.4}", bp)); }
+                println!("{}", parts.join("  "));
+            }
+        }
+        OutputFormat::Json => {
+            let json = serde_json::to_string_pretty(rows).unwrap();
+            println!("{}", json);
+        }
+        OutputFormat::Csv => {
+            println!("metric,index,score,precision,recall,brevity_penalty");
+            for row in rows {
+                println!("{},{},{:.4},{},{},{}",
+                    row.metric,
+                    row.index.map(|i| i.to_string()).unwrap_or_default(),
+                    row.score,
+                    row.precision.map(|v| format!("{:.4}", v)).unwrap_or_default(),
+                    row.recall.map(|v| format!("{:.4}", v)).unwrap_or_default(),
+                    row.brevity_penalty.map(|v| format!("{:.4}", v)).unwrap_or_default(),
+                );
+            }
+        }
+        OutputFormat::Markdown => {
+            println!("| metric | index | score | precision | recall | BP |");
+            println!("|--------|-------|-------|-----------|--------|----|");
+            for row in rows {
+                println!("| {} | {} | {:.4} | {} | {} | {} |",
+                    row.metric,
+                    row.index.map(|i| i.to_string()).unwrap_or_default(),
+                    row.score,
+                    row.precision.map(|v| format!("{:.4}", v)).unwrap_or_default(),
+                    row.recall.map(|v| format!("{:.4}", v)).unwrap_or_default(),
+                    row.brevity_penalty.map(|v| format!("{:.4}", v)).unwrap_or_default(),
+                );
+            }
+        }
+    }
+}
+
+/// Load scoring pairs from a file, auto-detecting format by extension.
+/// Supports: .json (array), .jsonl (one JSON object per line), .csv (reference,hypothesis columns).
+fn load_pairs(path: &str) -> Result<Vec<ScoringPair>, String> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| format!("Failed to read {}: {}", path, e))?;
+
+    if path.ends_with(".csv") {
+        load_pairs_csv(&content)
+    } else if path.ends_with(".jsonl") {
+        load_pairs_jsonl(&content)
+    } else {
+        // Default: try JSON array first, fall back to JSONL
+        serde_json::from_str::<Vec<ScoringPair>>(&content)
+            .or_else(|_| load_pairs_jsonl(&content))
+            .map_err(|e| format!("Failed to parse input as JSON or JSONL: {}", e))
+    }
+}
+
+fn load_pairs_csv(content: &str) -> Result<Vec<ScoringPair>, String> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .flexible(true)
+        .from_reader(content.as_bytes());
+
+    let headers = rdr.headers()
+        .map_err(|e| format!("CSV header error: {}", e))?
+        .clone();
+
+    // Find column indices (support reference/hypothesis or reference/candidate)
+    let ref_idx = headers.iter().position(|h| {
+        let h = h.trim().to_lowercase();
+        h == "reference" || h == "ref"
+    }).ok_or_else(|| "CSV must have a 'reference' column".to_string())?;
+
+    let hyp_idx = headers.iter().position(|h| {
+        let h = h.trim().to_lowercase();
+        h == "hypothesis" || h == "candidate" || h == "hyp"
+    }).ok_or_else(|| "CSV must have a 'hypothesis' or 'candidate' column".to_string())?;
+
+    let mut pairs = Vec::new();
+    for result in rdr.records() {
+        let record = result.map_err(|e| format!("CSV parse error: {}", e))?;
+        let reference = record.get(ref_idx).unwrap_or("").to_string();
+        let candidate = record.get(hyp_idx).unwrap_or("").to_string();
+        pairs.push(ScoringPair { candidate, reference });
+    }
+    Ok(pairs)
+}
+
+fn load_pairs_jsonl(content: &str) -> Result<Vec<ScoringPair>, String> {
+    content.lines()
+        .filter(|line| !line.trim().is_empty())
+        .enumerate()
+        .map(|(i, line)| {
+            serde_json::from_str::<ScoringPair>(line)
+                .map_err(|e| format!("JSONL parse error on line {}: {}", i + 1, e))
+        })
+        .collect()
 }
 
 /// CLI entry point
@@ -65,6 +304,7 @@ fn main() {
         "estimate-size" => cmd_estimate_size(&args[2..]),
         "batch-score" => cmd_batch_score(&args[2..]),
         "hash" => cmd_hash(&args[2..]),
+        "verify-proof" => cmd_verify_proof(&args[2..]),
         "help" | "--help" | "-h" => {
             print_usage();
             Ok(())
@@ -94,17 +334,38 @@ fn print_usage() {
     println!();
     println!("COMMANDS:");
     println!("  score              Score a candidate against a reference");
+    println!("  batch-score        Score multiple pairs from a file (JSON, JSONL, CSV)");
     println!("  differential-test  Run differential tests across implementations");
     println!("  compile-circuit    Compile a scoring metric to an arithmetic circuit");
     println!("  estimate-size      Estimate proof size for a configuration");
-    println!("  batch-score        Score multiple pairs from a JSON file");
     println!("  hash               Hash input data with BLAKE3");
+    println!("  verify-proof       Verify a previously generated proof file");
     println!("  help               Print this help message");
     println!("  version            Print version");
     println!();
+    println!("SCORE OPTIONS:");
+    println!("  --metric, -m       Metric name (exact_match, token_f1, bleu, rouge1, rouge2, rougel)");
+    println!("  --candidate, -c    Candidate text");
+    println!("  --reference, -r    Reference text");
+    println!("  --triple, -t       Run all three implementations and check agreement");
+    println!("  --output-format    Output format: text (default), json, csv, markdown");
+    println!();
+    println!("BATCH-SCORE OPTIONS:");
+    println!("  --input, -i        Input file (JSON array, JSONL, or CSV with reference,hypothesis columns)");
+    println!("  --metric, -m       Single metric name");
+    println!("  --metrics          Comma-separated metric list (e.g. exact_match,bleu,rouge_1)");
+    println!("  --output-format    Output format: text (default), json, csv, markdown");
+    println!();
+    println!("VERIFY-PROOF OPTIONS:");
+    println!("  --proof, -p        Path to proof file (.spct or .json)");
+    println!();
     println!("EXAMPLES:");
     println!("  spectacles-cli score --metric bleu --candidate \"the cat sat\" --reference \"the cat sat on the mat\"");
-    println!("  spectacles-cli differential-test --metric all --count 100");
+    println!("  spectacles-cli score --metric token_f1 -c \"hello world\" -r \"hello there\" --output-format json");
+    println!("  spectacles-cli batch-score --input pairs.csv --metrics exact_match,bleu,rouge_1 --output-format markdown");
+    println!("  spectacles-cli batch-score --input pairs.jsonl --metric bleu");
+    println!("  spectacles-cli differential-test --count 100");
+    println!("  spectacles-cli verify-proof --proof result.spct");
     println!("  spectacles-cli estimate-size --constraints 1000 --wires 500");
 }
 
@@ -113,6 +374,7 @@ fn cmd_score(args: &[String]) -> Result<(), String> {
     let mut candidate = String::new();
     let mut reference = String::new();
     let mut triple = false;
+    let mut output_format = OutputFormat::Text;
     
     let mut i = 0;
     while i < args.len() {
@@ -132,6 +394,13 @@ fn cmd_score(args: &[String]) -> Result<(), String> {
             "--triple" | "-t" => {
                 triple = true;
             }
+            "--output-format" => {
+                i += 1;
+                if i < args.len() {
+                    output_format = OutputFormat::from_str(&args[i])
+                        .ok_or_else(|| format!("Unknown output format: {}. Use: text, json, csv, markdown", args[i]))?;
+                }
+            }
             _ => {}
         }
         i += 1;
@@ -148,96 +417,74 @@ fn cmd_score(args: &[String]) -> Result<(), String> {
         candidate: candidate.clone(),
         reference: reference.clone(),
     };
-    
+
+    // Triple mode: always use text output for the 3-way comparison display
+    if triple {
+        return cmd_score_triple(metric, &pair);
+    }
+
+    let row = score_pair(metric, &pair);
+    emit_rows(&[row], output_format);
+    Ok(())
+}
+
+/// Triple-mode scoring (text only): shows reference/automaton/circuit agreement
+fn cmd_score_triple(metric: MetricType, pair: &ScoringPair) -> Result<(), String> {
     println!("Metric: {:?}", metric);
-    println!("Candidate: {:?}", candidate);
-    println!("Reference: {:?}", reference);
+    println!("Candidate: {:?}", pair.candidate);
+    println!("Reference: {:?}", pair.reference);
     println!();
-    
+
     match metric {
         MetricType::ExactMatch => {
             let scorer = ExactMatchScorer::case_insensitive();
-            if triple {
-                let result = scorer.score_and_verify(&pair);
-                println!("Reference impl:  {}", result.reference);
-                println!("Automaton impl:  {}", result.automaton);
-                println!("Circuit impl:    {}", result.circuit);
-                println!("Agreement:       {}", result.agreement);
-            } else {
-                println!("Score: {}", scorer.score_reference(&pair));
-            }
+            let result = scorer.score_and_verify(pair);
+            println!("Reference impl:  {}", result.reference);
+            println!("Automaton impl:  {}", result.automaton);
+            println!("Circuit impl:    {}", result.circuit);
+            println!("Agreement:       {}", result.agreement);
         }
         MetricType::TokenF1 => {
             let scorer = TokenF1Scorer::default_scorer();
-            if triple {
-                let result = scorer.score_and_verify(&pair);
-                println!("Reference impl:  P={:.4} R={:.4} F1={:.4}", result.reference.precision, result.reference.recall, result.reference.f1);
-                println!("Automaton impl:  P={:.4} R={:.4} F1={:.4}", result.automaton.precision, result.automaton.recall, result.automaton.f1);
-                println!("Circuit impl:    P={:.4} R={:.4} F1={:.4}", result.circuit.precision, result.circuit.recall, result.circuit.f1);
-                println!("Agreement:       {}", result.agreement);
-            } else {
-                let score = scorer.score_reference(&pair);
-                println!("Precision: {:.4}", score.precision);
-                println!("Recall:    {:.4}", score.recall);
-                println!("F1:        {:.4}", score.f1);
-            }
+            let result = scorer.score_and_verify(pair);
+            println!("Reference impl:  P={:.4} R={:.4} F1={:.4}", result.reference.precision, result.reference.recall, result.reference.f1);
+            println!("Automaton impl:  P={:.4} R={:.4} F1={:.4}", result.automaton.precision, result.automaton.recall, result.automaton.f1);
+            println!("Circuit impl:    P={:.4} R={:.4} F1={:.4}", result.circuit.precision, result.circuit.recall, result.circuit.f1);
+            println!("Agreement:       {}", result.agreement);
         }
         MetricType::Bleu => {
             let scorer = BleuScorer::with_smoothing(SmoothingMethod::Add1);
-            if triple {
-                let result = scorer.score_and_verify(&pair);
-                println!("Reference impl:  {:.4}", result.reference.score);
-                println!("Automaton impl:  {:.4}", result.automaton.score);
-                println!("Circuit impl:    {:.4}", result.circuit.score);
-                println!("Agreement:       {}", result.agreement);
-            } else {
-                let score = scorer.score_reference(&pair);
-                println!("BLEU:            {:.4}", score.score);
-                println!("Brevity Penalty: {:.4}", score.brevity_penalty);
-                for (i, p) in score.precisions.iter().enumerate() {
-                    println!("  {}-gram prec:   {:.4}", i + 1, p);
-                }
-            }
+            let result = scorer.score_and_verify(pair);
+            println!("Reference impl:  {:.4}", result.reference.score);
+            println!("Automaton impl:  {:.4}", result.automaton.score);
+            println!("Circuit impl:    {:.4}", result.circuit.score);
+            println!("Agreement:       {}", result.agreement);
         }
         MetricType::Rouge1 => {
             let scorer = RougeNScorer::rouge1();
-            if triple {
-                let result = scorer.score_and_verify(&pair);
-                println!("Reference impl:  F1={:.4}", result.reference.f1);
-                println!("Automaton impl:  F1={:.4}", result.automaton.f1);
-                println!("Circuit impl:    F1={:.4}", result.circuit.f1);
-                println!("Agreement:       {}", result.agreement);
-            } else {
-                let score = scorer.score_reference(&pair);
-                println!("ROUGE-1 P: {:.4}", score.precision);
-                println!("ROUGE-1 R: {:.4}", score.recall);
-                println!("ROUGE-1 F: {:.4}", score.f1);
-            }
+            let result = scorer.score_and_verify(pair);
+            println!("Reference impl:  F1={:.4}", result.reference.f1);
+            println!("Automaton impl:  F1={:.4}", result.automaton.f1);
+            println!("Circuit impl:    F1={:.4}", result.circuit.f1);
+            println!("Agreement:       {}", result.agreement);
         }
         MetricType::Rouge2 => {
             let scorer = RougeNScorer::rouge2();
-            let score = scorer.score_reference(&pair);
-            println!("ROUGE-2 P: {:.4}", score.precision);
-            println!("ROUGE-2 R: {:.4}", score.recall);
-            println!("ROUGE-2 F: {:.4}", score.f1);
+            let result = scorer.score_and_verify(pair);
+            println!("Reference impl:  F1={:.4}", result.reference.f1);
+            println!("Automaton impl:  F1={:.4}", result.automaton.f1);
+            println!("Circuit impl:    F1={:.4}", result.circuit.f1);
+            println!("Agreement:       {}", result.agreement);
         }
         MetricType::RougeL => {
             let scorer = RougeLScorer::default_scorer();
-            if triple {
-                let result = scorer.score_and_verify(&pair);
-                println!("Reference impl:  F1={:.4}", result.reference.f1);
-                println!("Automaton impl:  F1={:.4}", result.automaton.f1);
-                println!("Circuit impl:    F1={:.4}", result.circuit.f1);
-                println!("Agreement:       {}", result.agreement);
-            } else {
-                let score = scorer.score_reference(&pair);
-                println!("ROUGE-L P: {:.4}", score.precision);
-                println!("ROUGE-L R: {:.4}", score.recall);
-                println!("ROUGE-L F: {:.4}", score.f1);
-            }
+            let result = scorer.score_and_verify(pair);
+            println!("Reference impl:  F1={:.4}", result.reference.f1);
+            println!("Automaton impl:  F1={:.4}", result.automaton.f1);
+            println!("Circuit impl:    F1={:.4}", result.circuit.f1);
+            println!("Agreement:       {}", result.agreement);
         }
     }
-    
     Ok(())
 }
 
@@ -323,8 +570,7 @@ fn cmd_compile_circuit(args: &[String]) -> Result<(), String> {
     println!("Compiling circuit for metric: {}", metric_str);
     println!("Max input length: {}", max_len);
     
-    let circuit = scoring::ScoringCircuit::new();
-    // In a real implementation, this would compile the metric to a circuit
+    let _circuit = scoring::ScoringCircuit::new();
     
     let size = estimate_proof_size(max_len * 10, max_len * 5, 128);
     println!("Estimated circuit size: {} constraints", max_len * 10);
@@ -375,8 +621,10 @@ fn cmd_estimate_size(args: &[String]) -> Result<(), String> {
 }
 
 fn cmd_batch_score(args: &[String]) -> Result<(), String> {
-    let mut metric_str = "bleu".to_string();
+    let mut metric_str = String::new();
+    let mut metrics_str = String::new();
     let mut input_file = String::new();
+    let mut output_format = OutputFormat::Text;
     
     let mut i = 0;
     while i < args.len() {
@@ -385,9 +633,20 @@ fn cmd_batch_score(args: &[String]) -> Result<(), String> {
                 i += 1;
                 if i < args.len() { metric_str = args[i].clone(); }
             }
+            "--metrics" | "--metric-list" => {
+                i += 1;
+                if i < args.len() { metrics_str = args[i].clone(); }
+            }
             "--input" | "-i" => {
                 i += 1;
                 if i < args.len() { input_file = args[i].to_string(); }
+            }
+            "--output-format" => {
+                i += 1;
+                if i < args.len() {
+                    output_format = OutputFormat::from_str(&args[i])
+                        .ok_or_else(|| format!("Unknown output format: {}. Use: text, json, csv, markdown", args[i]))?;
+                }
             }
             _ => {}
         }
@@ -397,36 +656,35 @@ fn cmd_batch_score(args: &[String]) -> Result<(), String> {
     if input_file.is_empty() {
         return Err("--input is required for batch scoring".to_string());
     }
-    
-    let content = fs::read_to_string(&input_file)
-        .map_err(|e| format!("Failed to read {}: {}", input_file, e))?;
-    
-    let pairs: Vec<ScoringPair> = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
-    
-    println!("Scoring {} pairs with metric: {}", pairs.len(), metric_str);
-    
-    let metric = MetricType::from_str(&metric_str)
-        .ok_or_else(|| format!("Unknown metric: {}", metric_str))?;
-    
-    match metric {
-        MetricType::Bleu => {
-            let scorer = BleuScorer::with_smoothing(SmoothingMethod::Add1);
-            let corpus_result = scorer.reference_score_corpus(&pairs);
-            println!("Corpus BLEU: {:.4}", corpus_result.score);
-        }
-        MetricType::TokenF1 => {
-            let scorer = TokenF1Scorer::default_scorer();
-            for (i, pair) in pairs.iter().enumerate() {
-                let score = scorer.score_reference(pair);
-                println!("[{}] F1={:.4}", i, score.f1);
-            }
-        }
-        _ => {
-            println!("Batch scoring for {:?} not yet implemented", metric);
+
+    // Resolve which metrics to run
+    let metrics: Vec<MetricType> = if !metrics_str.is_empty() {
+        parse_metrics(&metrics_str)?
+    } else if !metric_str.is_empty() {
+        vec![MetricType::from_str(&metric_str)
+            .ok_or_else(|| format!("Unknown metric: {}", metric_str))?]
+    } else {
+        return Err("Either --metric or --metrics is required".to_string());
+    };
+
+    let pairs = load_pairs(&input_file)?;
+
+    eprintln!("Scoring {} pairs with {} metric(s): {}",
+        pairs.len(),
+        metrics.len(),
+        metrics.iter().map(|m| m.name()).collect::<Vec<_>>().join(", "),
+    );
+
+    let mut rows = Vec::new();
+    for metric in &metrics {
+        for (idx, pair) in pairs.iter().enumerate() {
+            let mut row = score_pair(*metric, pair);
+            row.index = Some(idx);
+            rows.push(row);
         }
     }
-    
+
+    emit_rows(&rows, output_format);
     Ok(())
 }
 
@@ -463,5 +721,76 @@ fn cmd_hash(args: &[String]) -> Result<(), String> {
     let hash = hasher.hash_hex(data.as_bytes());
     println!("{}", hash);
     
+    Ok(())
+}
+
+fn print_proof_info(proof: &CompactProof) {
+    println!("Metric:           {}", proof.metric_id);
+    println!("Candidate hash:   {}", hex::encode(proof.candidate_hash));
+    println!("Reference hash:   {}", hex::encode(proof.reference_hash));
+    println!("Score:            {}/{}", proof.score_numerator, proof.score_denominator);
+    println!("Commitment:       {}", hex::encode(proof.commitment));
+    println!("Proof data size:  {} bytes", proof.proof_data.len());
+}
+
+fn cmd_verify_proof(args: &[String]) -> Result<(), String> {
+    let mut proof_path = String::new();
+
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--proof" | "-p" => {
+                i += 1;
+                if i < args.len() { proof_path = args[i].to_string(); }
+            }
+            _ => {
+                if proof_path.is_empty() {
+                    proof_path = args[i].to_string();
+                }
+            }
+        }
+        i += 1;
+    }
+
+    if proof_path.is_empty() {
+        return Err("--proof <file> is required".to_string());
+    }
+
+    let data = fs::read(&proof_path)
+        .map_err(|e| format!("Failed to read proof file {}: {}", proof_path, e))?;
+
+    // Try JSON format first
+    if proof_path.ends_with(".json") {
+        let proof: CompactProof = serde_json::from_slice(&data)
+            .map_err(|e| format!("Failed to parse proof JSON: {}", e))?;
+        print_proof_info(&proof);
+        // Re-hash and verify commitment
+        let hasher = SpectaclesHasher::new();
+        let computed = hasher.hash(&proof.proof_data);
+        let commitment_ok = computed == proof.commitment;
+        println!("Commitment check: {}", if commitment_ok { "PASS" } else { "FAIL" });
+        return Ok(());
+    }
+
+    // Binary format: validate header
+    let header = ProofHeader::from_bytes(&data)
+        .map_err(|e| format!("Invalid proof header: {}", e))?;
+    println!("Proof file:       {}", proof_path);
+    println!("Format version:   {}.{}", header.version.major, header.version.minor);
+    println!("Payload size:     {} bytes", header.payload_size);
+    println!("Checksum:         {}", hex::encode(&header.checksum));
+
+    // Verify checksum over payload
+    let payload_start = 49; // header size
+    if data.len() >= payload_start {
+        let payload = &data[payload_start..];
+        let hasher = SpectaclesHasher::new();
+        let computed = hasher.hash(payload);
+        let checksum_ok = computed == header.checksum;
+        println!("Checksum verify:  {}", if checksum_ok { "PASS" } else { "FAIL" });
+    } else {
+        println!("Checksum verify:  SKIP (no payload)");
+    }
+
     Ok(())
 }
