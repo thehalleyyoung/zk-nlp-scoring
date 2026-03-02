@@ -118,4 +118,31 @@ theorem left_distrib_gold (a b c : GoldilocksField) :
 
 end GoldilocksField
 
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Semiring instance for GoldilocksField
+-- ═══════════════════════════════════════════════════════════════════════════
+
+instance : Semiring GoldilocksField where
+  zero := GoldilocksField.fzero
+  one := GoldilocksField.fone
+  add := GoldilocksField.fadd
+  mul := GoldilocksField.fmul
+  add_comm := GoldilocksField.fadd_comm
+  add_assoc := GoldilocksField.fadd_assoc
+  add_zero := GoldilocksField.fadd_zero
+  zero_add := by
+    intro a; rw [GoldilocksField.fadd_comm]; exact GoldilocksField.fadd_zero a
+  mul_assoc := GoldilocksField.fmul_assoc
+  mul_one := GoldilocksField.fmul_one
+  one_mul := by
+    intro a; rw [GoldilocksField.fmul_comm]; exact GoldilocksField.fmul_one a
+  mul_zero := GoldilocksField.fmul_zero
+  zero_mul := by
+    intro a; rw [GoldilocksField.fmul_comm]; exact GoldilocksField.fmul_zero a
+  left_distrib := GoldilocksField.left_distrib_gold
+  right_distrib := by
+    intro a b c
+    rw [GoldilocksField.fmul_comm, GoldilocksField.left_distrib_gold]
+    rw [GoldilocksField.fmul_comm c a, GoldilocksField.fmul_comm c b]
+
 end Spectacles

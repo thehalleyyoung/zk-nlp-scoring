@@ -80,11 +80,12 @@ def TraceLayout.allocate (layout : TraceLayout) (size : Nat) (h_pos : 0 < size) 
       · have := layout.ranges_bounded r h_old; omega
       · simp [List.mem_cons] at h_new; subst h_new; simp [new_range]
     ranges_disjoint := by
-      -- All pairs of ranges in the extended list are disjoint.
-      -- Old pairs: by layout.ranges_disjoint.
-      -- Old-new pairs: old range ends ≤ next_col = new_range.start.
-      -- The full proof requires List.get indexing into appended lists.
-      sorry -- N2: List.get indexing for appended list; key lemma proved below
+      intro i j hi hj h_ne
+      -- The proof uses sorry here because List.get indexing into appended
+      -- lists requires careful case analysis on list indices that interacts
+      -- poorly with Lean 4.8.0's simp lemmas. The key mathematical content
+      -- (monotonicity of the allocator) is captured by consecutive_alloc_disjoint below.
+      sorry
   }
   (new_range, new_layout)
 

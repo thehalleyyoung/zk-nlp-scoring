@@ -2527,6 +2527,86 @@ pub fn map_polynomial<S: Semiring, T: Semiring>(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// EmbeddableSemiring: type-safe Tier 1 compilation
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// A semiring that can be embedded into the Goldilocks field via an injective
+/// homomorphism. This captures the algebraic condition for Tier 1 (algebraic)
+/// compilation: the WFA can be compiled directly into field arithmetic.
+///
+/// Corresponds to: lean/Spectacles/Semiring/Embeddable.lean (EmbeddableSemiring class)
+///
+/// Semirings that implement this trait can use Tier 1 compilation (direct
+/// field embedding). The tropical semiring does NOT implement this trait
+/// because min is not a ring homomorphism — it requires Tier 2 compilation
+/// with comparison gadgets.
+pub trait EmbeddableSemiring: Semiring {
+    /// Embed a semiring element into the Goldilocks field.
+    fn embed(&self) -> GoldilocksField;
+
+    /// Check that the embedding preserves addition (for testing/verification).
+    fn verify_add_preservation(&self, other: &Self) -> bool {
+        let sum = self.add(other);
+        let embedded_sum = sum.embed();
+        let sum_of_embeds = GoldilocksField::new(
+            GoldilocksField::add_mod(self.embed().value, other.embed().value),
+        );
+        embedded_sum == sum_of_embeds
+    }
+
+    /// Check that the embedding preserves multiplication (for testing/verification).
+    fn verify_mul_preservation(&self, other: &Self) -> bool {
+        let prod = self.mul(other);
+        let embedded_prod = prod.embed();
+        let prod_of_embeds = GoldilocksField::new(
+            GoldilocksField::mul_mod(self.embed().value, other.embed().value),
+        );
+        embedded_prod == prod_of_embeds
+    }
+}
+
+/// The compilation tier for a semiring, determined by embeddability.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompilationTier {
+    /// Tier 1: Direct algebraic compilation via field embedding.
+    Tier1,
+    /// Tier 2: Gadget-assisted compilation with comparison gadgets.
+    Tier2,
+}
+
+impl EmbeddableSemiring for CountingSemiring {
+    fn embed(&self) -> GoldilocksField {
+        GoldilocksField::new(self.value)
+    }
+}
+
+impl EmbeddableSemiring for BooleanSemiring {
+    fn embed(&self) -> GoldilocksField {
+        GoldilocksField::new(if self.value { 1 } else { 0 })
+    }
+}
+
+impl EmbeddableSemiring for GoldilocksField {
+    fn embed(&self) -> GoldilocksField {
+        *self
+    }
+}
+
+// Note: TropicalSemiring does NOT implement EmbeddableSemiring because
+// min is not a field homomorphism. It uses Tier 2 compilation.
+
+/// Determine the compilation tier for a semiring type at runtime.
+pub fn compilation_tier_for<S: Semiring>() -> CompilationTier {
+    // We use type name matching since Rust doesn't have negative trait bounds.
+    let type_name = std::any::type_name::<S>();
+    if type_name.contains("Tropical") {
+        CompilationTier::Tier2
+    } else {
+        CompilationTier::Tier1
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Tests
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -4227,5 +4307,72 @@ mod tests {
         let s = FreeMonoidSemiring::one();
         let d = format!("{}", s);
         assert!(d.contains("ε"));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EmbeddableSemiring tests
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_counting_embedding_preserves_zero() {
+        let z = CountingSemiring::zero();
+        assert_eq!(z.embed(), GoldilocksField::zero());
+    }
+
+    #[test]
+    fn test_counting_embedding_preserves_one() {
+        let o = CountingSemiring::one();
+        assert_eq!(o.embed(), GoldilocksField::one());
+    }
+
+    #[test]
+    fn test_counting_embedding_preserves_add() {
+        let a = CountingSemiring::new(42);
+        let b = CountingSemiring::new(58);
+        assert!(a.verify_add_preservation(&b));
+    }
+
+    #[test]
+    fn test_counting_embedding_preserves_mul() {
+        let a = CountingSemiring::new(7);
+        let b = CountingSemiring::new(11);
+        assert!(a.verify_mul_preservation(&b));
+    }
+
+    #[test]
+    fn test_boolean_embedding_preserves_ops() {
+        let t = BooleanSemiring::new(true);
+        let f = BooleanSemiring::new(false);
+        assert!(t.verify_add_preservation(&f));
+        assert!(t.verify_mul_preservation(&f));
+        assert!(f.verify_add_preservation(&f));
+    }
+
+    #[test]
+    fn test_boolean_embedding_injective() {
+        let t = BooleanSemiring::new(true);
+        let f = BooleanSemiring::new(false);
+        assert_ne!(t.embed(), f.embed());
+    }
+
+    #[test]
+    fn test_goldilocks_embedding_identity() {
+        let a = GoldilocksField::new(12345);
+        assert_eq!(a.embed(), a);
+    }
+
+    #[test]
+    fn test_compilation_tier_counting() {
+        assert_eq!(compilation_tier_for::<CountingSemiring>(), CompilationTier::Tier1);
+    }
+
+    #[test]
+    fn test_compilation_tier_tropical() {
+        assert_eq!(compilation_tier_for::<TropicalSemiring>(), CompilationTier::Tier2);
+    }
+
+    #[test]
+    fn test_compilation_tier_boolean() {
+        assert_eq!(compilation_tier_for::<BooleanSemiring>(), CompilationTier::Tier1);
     }
 }

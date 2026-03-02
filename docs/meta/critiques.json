@@ -1,53 +1,96 @@
 {
   "project": "spectacles-wfa-zk-scoring-circuits",
-  "title": "Spectacles: Machine-Checkable Proofs for NLP Benchmark Scoring",
-  "synthesis_date": "2026-03-02",
-  "average_score": 6.67,
-  "score_range": [6, 7],
+  "title": "Spectacles: A Verified Compiler from Semiring-Weighted Automata to Zero-Knowledge Scoring Circuits",
+  "date": "2026-03-02",
   "reviewers": [
     {
       "name": "Cesar Sanchez",
       "persona": "formal_verification_AI_researcher",
-      "score": 6,
-      "key_strength": "Novel grounding in Schützenberger's rational power series provides principled characterization of WFA-representable metrics.",
-      "key_weakness": "The 15 Lean sorrys and unverified Lean-to-Rust gap fundamentally undermine the machine-checkable correctness claim.",
-      "review_file": "review_cesar_sanchez.md"
+      "recommendation": "Weak Accept",
+      "confidence": 4,
+      "key_strength": "Principled algebraic foundation in Schützenberger's rational power series theory, with honest sorry audit and bug-finding that validates the formal specification methodology.",
+      "key_weakness": "Central soundness theorems (tier1_soundness, tier2_soundness) are sorry'd with vacuous hypotheses (h_stark_accepts : True), making the formalization's guarantees far weaker than presented.",
+      "notable_observations": [
+        "The constraint_satisfied definition is True — a vacuous placeholder that makes soundness theorems trivially satisfiable by any trace",
+        "The all_constraints_degree_bounded axiom is about the compiler's code generation, not a cryptographic assumption — it should be provable but remains unproved",
+        "Differential testing covers an infinitesimal fraction of the input space for complex metrics like BLEU-4",
+        "The Boolean embedding caveat (OR → + only for deterministic WFA) creates a subtle correctness boundary that tests may not fully exercise"
+      ]
     },
     {
       "name": "Roderick Bloem",
       "persona": "machine_learning_specification_safety_researcher",
-      "score": 7,
-      "key_strength": "Addresses a genuine gap in ML evaluation integrity with a practical, deployable STARK proof pipeline.",
-      "key_weakness": "Specification fidelity—whether the WFA formalization captures practitioner-intended metric semantics—is assumed rather than verified.",
-      "review_file": "review_roderick_bloem.md"
+      "recommendation": "Weak Accept",
+      "confidence": 4,
+      "key_strength": "Practical STARK verification performance (1.5ms verify, 270 KiB proofs) with sound incentive structure: cost borne by prover, not verifier.",
+      "key_weakness": "The system addresses score fabrication — a minor practical threat — while the dominant threats (contamination beyond n-gram level, selective reporting, benchmark gaming, metric misalignment) are either partially addressed or out of scope.",
+      "notable_observations": [
+        "67.7% metric coverage excludes exactly the neural metrics (BERTScore, COMET, BLEURT) the community is moving toward",
+        "3.8s prove time per 400-state WFA makes full-corpus certification infeasible: 10 metrics × 10K examples ≈ 4 days",
+        "The PSI contamination protocol requires revealing training corpus n-grams post-protocol, undermining the privacy PSI is designed to provide",
+        "No mechanism addresses selective reporting: generate 100 evaluations, publish only the best"
+      ]
     },
     {
       "name": "Vasco Vasconcelos",
       "persona": "probabilistic_models_and_formal_methods_expert",
-      "score": 7,
-      "key_strength": "Elegant typed semiring abstraction unifies diverse NLP metrics under a single algebraic compilation framework.",
-      "key_weakness": "The denotational-to-operational semantics gap between Lean specification and Rust engine is tested but not formally proven.",
-      "review_file": "review_vasco_vasconcelos.md"
+      "recommendation": "Weak Accept",
+      "confidence": 4,
+      "key_strength": "Elegant KleeneSemiring typeclass hierarchy supporting generic WFA evaluation over semiring-parametric pipelines, with correct treatment of the tropical semiring's non-group additive structure.",
+      "key_weakness": "The Goldilocks field embedding does not preserve tropical semiring semantics — Tier 2 gadget soundness proofs are tautological (proving Nat.min a b = if a ≤ b then a else b), leaving the actual circuit-level soundness unproved.",
+      "notable_observations": [
+        "The EvalSpec DSL type system exists only in Rust with no corresponding Lean formalization, leaving type soundness unchecked",
+        "The semiring-parametric AIR claim is misleading — compilation is actually a case split on semiring type, not truly parametric",
+        "The counting semiring's partial Kleene star (defined only at 0) creates a tension with the total star function in the StarSemiring typeclass",
+        "Using Mathlib's Finset.sum instead of custom finFoldl would likely resolve sorrys N1a and N1b"
+      ]
     }
   ],
-  "consensus_strengths": [
-    "Novel and principled application of Schützenberger's rational power series theory to characterize WFA-representable NLP metrics",
-    "Practical STARK proof performance (270 KiB proofs, 1.5ms verification) demonstrates real-world deployability",
-    "Bug-finding during formalization validates the safety value of formal specification even before verification is complete",
-    "Honest and theoretically grounded coverage analysis (21/31 metrics) derived from algebraic properties rather than ad hoc arguments"
-  ],
-  "consensus_weaknesses": [
-    "The 15 remaining Lean sorrys leave the formalization incomplete and potentially unsound, undermining the machine-checkable claim",
-    "The Lean-to-Rust compilation gap is validated only by differential testing, not by verified extraction or a machine-checked adequacy theorem",
-    "STARK proofs certify circuit execution fidelity, not metric correctness—the distinction is insufficiently acknowledged",
-    "Specification fidelity to practitioner-intended metric semantics is assumed rather than systematically validated against variant ambiguity",
-    "O(n²) STARK scaling and 33% metric non-coverage limit practical applicability to short-sequence, string-matching-only evaluation scenarios"
-  ],
-  "actionable_recommendations": [
-    "Categorize and discharge the 15 Lean sorrys, prioritizing those on the critical path for end-to-end correctness theorems",
-    "Close the Lean-to-Rust gap via verified extraction (e.g., Lean 4 native code generation or a machine-checked bisimulation between the specification and engine)",
-    "Articulate a precise trust model that distinguishes circuit execution fidelity, WFA compilation correctness, specification correspondence, and specification intent",
-    "Address specification ambiguity by parameterizing Lean specifications over metric variant choices and validating against multiple reference implementations",
-    "Investigate recursive STARK composition and weighted pushdown automata to address scaling limitations and extend coverage beyond rational power series"
-  ]
+  "consensus_recommendation": "Weak Accept",
+  "synthesis": {
+    "summary": "All three reviewers converge on a 'Weak Accept' with high confidence (4/5), recognizing Spectacles as a technically ambitious and principally grounded contribution that falls short of its verification claims. The algebraic approach (WFA over typed semirings, Schützenberger's theorem) is praised unanimously, but the formalization gaps are deeper than the documentation suggests: the central soundness theorems are sorry'd with vacuous hypotheses, the circuit-level semantics are undefined in Lean, and the EvalSpec DSL is unformalized. The practical impact is limited by a narrow threat model (score fabrication rather than benchmark gaming), 67.7% metric coverage that excludes trending neural metrics, and deployment barriers in the PSI contamination protocol.",
+    "agreed_strengths": [
+      "Principled algebraic foundation in Schützenberger's rational power series theory provides a mathematically rigorous characterization of WFA-representable metrics, yielding an honest 21/31 coverage figure derived from algebraic properties rather than implementation limitations",
+      "The bug-finding results (Montgomery inverse constant, Lagrange interpolation) provide compelling empirical evidence that formal specification catches bugs that testing alone would miss — even before full verification is achieved",
+      "Practical STARK performance (1.5ms verify, 270 KiB proofs, sub-4ms at all scales) demonstrates that the verification overhead is deployable for individual score certification, with the cost asymmetry correctly placing the burden on the prover",
+      "The KleeneSemiring typeclass hierarchy and sorry audit demonstrate genuine proof engineering effort and intellectual honesty about the formalization's completeness, distinguishing cryptographic assumptions from incomplete proofs",
+      "The 68,748 triple-agreement differential tests with zero disagreements, combined with independent Python re-verification, provide substantial empirical confidence in the implementation's correctness for tested inputs"
+    ],
+    "agreed_weaknesses": [
+      "The central soundness theorems (tier1_soundness, tier2_soundness) are sorry'd with vacuous hypotheses (h_stark_accepts : True, constraint_satisfied = True), meaning the Lean formalization does not actually connect the algebraic properties it proves to the circuit execution model it claims to verify",
+      "The Lean-to-Rust gap is bridged only by differential testing, not by verified extraction or a formal adequacy theorem — covering an infinitesimal fraction of the input space for complex metrics and providing probabilistic assurance rather than proof",
+      "The EvalSpec DSL, which is the interface between user metric specifications and the WFA compiler, has no Lean formalization of its type system, typing rules, or denotational semantics — a critical gap in the trust chain from specification intent to formal guarantee",
+      "The 67.7% metric coverage ceiling excludes exactly the neural metrics (BERTScore, COMET, BLEURT, MAUVE) that represent the ML community's direction of travel, and this ceiling is inherent to the WFA framework, not an implementation limitation to be resolved",
+      "The PSI contamination protocol faces fundamental deployment barriers: requiring post-protocol revelation of training corpus n-grams undermines privacy, lacking VOPRF allows targeted corruption of results, and no UC security analysis is provided"
+    ],
+    "divergent_opinions": [
+      {
+        "topic": "Severity of the Lean formalization gaps",
+        "sanchez_position": "The vacuous soundness theorems are the primary weakness — they make the 'machine-checkable proofs' claim misleading. The formalization proves algebraic properties but not the end-to-end correctness chain.",
+        "bloem_position": "The formalization gaps are a concern but secondary to the practical threat model mismatch — even perfect verification of the wrong problem has limited value.",
+        "vasconcelos_position": "The gaps are specifically in the type-theoretic and circuit-level formalizations — the algebraic foundations (semiring axioms, embeddings) are sound, but the connection to the computation model is missing."
+      },
+      {
+        "topic": "Practical impact and threat model relevance",
+        "sanchez_position": "Acknowledges the problem is genuine but focuses on whether the formalization delivers the claimed guarantees. The threat model question is secondary to whether the proofs are complete.",
+        "bloem_position": "The threat model is the primary issue — the system addresses score fabrication (a minor threat) while benchmark gaming, selective reporting, and metric misalignment (the major threats) are out of scope. The engineering may solve the wrong problem.",
+        "vasconcelos_position": "Focuses on the mathematical foundations rather than the practical threat model. The algebraic elegance is appreciated regardless of deployment considerations."
+      },
+      {
+        "topic": "Whether differential testing adequately bridges the Lean-Rust gap",
+        "sanchez_position": "No — 68K tests cover an infinitesimal fraction of the input space, and systematic errors shared across implementations would not be caught. The Boolean embedding caveat illustrates the risk.",
+        "bloem_position": "Partially — the tests are impressive in scale and cross-language verification (Python, Rust) reduces systematic bias, but they cannot replace formal proof for adversarial settings.",
+        "vasconcelos_position": "The gap is more specifically about the absence of a formal correspondence between the Lean specification types (ExtNat, GoldilocksField) and the Rust implementation types (f64, u64). The tests check values but not type-level properties."
+      }
+    ],
+    "actionable_recommendations": [
+      "Discharge the vacuous circuit-level definitions: replace constraint_satisfied = True with a genuine AIR constraint evaluation function, and replace h_stark_accepts : True with a meaningful predicate capturing what the STARK verifier checks. This is the single highest-impact change for the formalization's credibility.",
+      "Formalize the EvalSpec DSL type system in Lean 4: define the syntax, typing rules, and denotational semantics, then prove type preservation and type soundness for the EvalSpec-to-WFA compiler. This closes the critical gap between user specification and formal guarantee.",
+      "Prove the comparison gadget soundness at the circuit level: replace the tautological Nat.min proof with a theorem that the AIR constraints encoding the bit-decomposition comparison gadget are satisfiable if and only if the output equals the tropical min of the inputs. This is required for Tier 2 soundness.",
+      "Introduce an EmbeddableSemiring typeclass capturing the existence of an injective semiring homomorphism into F_p, making the Tier 1/Tier 2 compilation decision type-safe and enabling a unified compilation correctness theorem conditioned on embeddability.",
+      "Revise the threat model and impact claims to clearly distinguish what Spectacles guarantees (execution fidelity of a specific metric computation on committed data) from what it does not guarantee (contamination beyond n-gram level, selective reporting, metric appropriateness, model identity without TEE hardware).",
+      "Address STARK scaling for full-corpus certification: investigate recursive proof composition (STARK-of-STARKs), batch proof generation, or incremental verification to reduce the per-example overhead from 3.8s to sub-100ms, enabling practical deployment on 10K+ example evaluation runs.",
+      "Adopt Mathlib's Finset.sum and ZMod types to simplify remaining sorrys (N1a, N1b, N3a) and provide access to the standard algebraic library, even at the cost of increased build dependency."
+    ]
+  }
 }
