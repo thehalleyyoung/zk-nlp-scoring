@@ -3,630 +3,766 @@
 **Machine-checkable zero-knowledge proofs that NLP benchmark scores were computed correctly.**
 
 Spectacles compiles NLP scoring metrics (BLEU, ROUGE, Token F1, Exact Match, chrF)
-into weighted finite automata (WFA) over typed semirings, then generates
-STARK zero-knowledge proofs certifying score correctness. A companion Lean 4
-formalization proves the underlying algebraic pipeline is sound.
-
----
+into weighted finite automata (WFA), then lowers those automata to STARK arithmetic
+circuits over the Goldilocks field. The result: a cryptographic proof that a reported
+score matches the actual computation, verifiable in milliseconds.
 
 ## Table of Contents
 
-1. [Quickstart](#quickstart)
-2. [How It Works](#how-it-works)
-3. [Supported Metrics](#supported-metrics)
-4. [CLI Reference](#cli-reference)
-   - [score](#score)
-   - [batch-score](#batch-score)
-   - [differential-test](#differential-test)
-   - [compile-circuit](#compile-circuit)
-   - [estimate-size](#estimate-size)
-   - [hash](#hash)
-   - [verify-proof](#verify-proof)
-5. [Input & Output Formats](#input--output-formats)
-6. [Batch Processing](#batch-processing)
-7. [Architecture Overview](#architecture-overview)
-8. [Weighted Finite Automata & Semirings](#weighted-finite-automata--semirings)
-9. [STARK Proof System](#stark-proof-system)
-10. [Lean 4 Formalization](#lean-4-formalization)
-11. [What's Proved](#whats-proved)
-12. [Key Numbers](#key-numbers)
-13. [Limitations](#limitations)
-14. [Further Documentation](#further-documentation)
-15. [License](#license)
+- [Key Results](#key-results)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [CLI Reference](#cli-reference)
+  - [score](#score)
+  - [batch-score](#batch-score)
+  - [compile-circuit](#compile-circuit)
+  - [estimate-size](#estimate-size)
+  - [hash](#hash)
+  - [verify-proof](#verify-proof)
+  - [differential-test](#differential-test)
+- [Supported Metrics](#supported-metrics)
+- [Output Formats](#output-formats)
+- [Triple Agreement Verification](#triple-agreement-verification)
+- [Batch Scoring](#batch-scoring-in-depth)
+- [Architecture](#architecture)
+- [STARK Proof System](#stark-proof-system)
+- [Workspace Crates](#workspace-crates)
+- [License](#license)
 
 ---
 
-## Quickstart
+## Key Results
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| Compilation checks | **68,748 tests, 0 disagreements** | `data/compilation_correctness.json` |
+| Comprehensive benchmark | **1,230 checks across 6 metrics, 0 disagreements** | `data/comprehensive_benchmark_results.json` |
+| E2E certification proofs | **49 metric-bound STARK proofs** across 5 metrics | `data/comprehensive_benchmark_results.json` |
+| STARK proofs verified | **76 proofs** (4–1,024 states) | `data/stark_scaling_regression.json` |
+| 400-state BLEU-4 target | **3.8s prove, 1.5ms verify** | measured |
+| Max proven states | **1,024** (49.9s prove, 2.3ms verify) | measured |
+| WFA metric coverage | **21/31 metrics (67.7%) WFA-representable** | census |
+| Multi-layer contamination | **100% accuracy** (vs 83.3% n-gram-only) | `data/contamination_multi_layer_v2.json` |
+
+---
+
+## Installation
+
+### Prerequisites
+
+- [Rust](https://rustup.rs/) 1.75+ (edition 2021)
+
+### Build from source
 
 ```bash
-# Build (release mode recommended for proof generation)
+git clone <repository-url>
+cd zk-nlp-scoring
 cargo build --release
+```
 
-# Run the fast semiring unit tests (191 tests, < 1 s)
-cargo test -p spectacles-core --lib semiring
+The CLI binary is located at `target/release/spectacles-cli`.
 
-# Score a single pair
-cargo run --release --bin spectacles-cli -- \
-  score --metric bleu \
-  --candidate "the cat sat" \
-  --reference "the cat sat on the mat"
+### Verify the build
 
-# Batch-score a CSV file with multiple metrics at once
-cargo run --release --bin spectacles-cli -- \
-  batch-score --input pairs.csv \
-  --metrics exact_match,bleu,rouge_1 \
-  --output-format markdown
-
-# Run differential tests (reference ↔ WFA ↔ circuit agreement)
-cargo run --release --bin spectacles-cli -- \
-  differential-test --count 200
-
-# Lean 4 formalization (requires Lean 4.8.0)
-cd lean && lake build
-# → Build completed successfully (13 sorry warnings, 0 errors)
-
-# Lean–Rust conformance bridge
-cargo run --release --bin lean_rust_conformance
-# → 8/8 checks passed (100.0%), 0 disagreements
+```console
+$ ./target/release/spectacles-cli version
+spectacles-cli 0.1.0
 ```
 
 ---
 
-## How It Works
+## Quick Start
 
-Spectacles operates through a three-stage pipeline:
+Score a candidate string against a reference:
 
-1. **Metric → WFA compilation.**  Each NLP scoring function is decomposed into
-   a weighted finite automaton over an appropriate semiring. For example, Exact
-   Match uses the Boolean semiring (∨, ∧), BLEU uses the Counting semiring
-   (ℕ, +, ×) with bounded clipping, and ROUGE-L uses the Tropical semiring
-   (min, +) for longest-common-subsequence via shortest paths.
+```console
+$ ./target/release/spectacles-cli score --metric bleu \
+    --candidate "the cat sat on the mat" \
+    --reference "the cat is on the mat"
+bleu  score=0.4889  BP=1.0000
+```
 
-2. **WFA → STARK circuit compilation.**  The WFA's transition table and
-   semiring operations are compiled to an Algebraic Intermediate Representation
-   (AIR) over the Goldilocks field (F_p, p = 2⁶⁴ − 2³² + 1).  Two compilation
-   tiers handle the algebra:
-   - **Tier 1** — direct semiring homomorphism φ: S → F_p (Boolean, Counting).
-   - **Tier 2** — comparison gadgets with 62-bit decomposition (Tropical).
+Check exact match:
 
-3. **STARK proof generation & verification.**  A FRI-based STARK prover
-   generates a succinct proof that the circuit accepts; a verifier checks the
-   proof in ~1.5 ms without re-running the scoring computation.  Each proof
-   includes a BLAKE3 Merkle commitment to the WFA transition table,
-   cryptographically binding the result to the specific metric definition.
+```console
+$ ./target/release/spectacles-cli score --metric exact_match \
+    --candidate "hello world" --reference "hello world"
+exact_match  score=1.0000
 
-Every metric has **three independent implementations** (reference, automaton,
-circuit) that are cross-validated by the differential testing framework.
+$ ./target/release/spectacles-cli score --metric exact_match \
+    --candidate "hello" --reference "world"
+exact_match  score=0.0000
+```
 
----
+Get JSON output:
 
-## Supported Metrics
-
-| Metric | CLI Name(s) | Semiring | Compilation Tier | Description |
-|--------|------------|----------|-----------------|-------------|
-| **Exact Match** | `exact_match`, `exact-match`, `em` | Boolean | Tier 1 | Binary string equality after normalization |
-| **Token F1** | `token_f1`, `token-f1`, `f1` | Counting | Tier 1 + F-measure gadget | Token-level precision/recall/F1 |
-| **BLEU** | `bleu` | Counting | Tier 1 + geo-mean + BP gadgets | N-gram precision with brevity penalty (1–4 grams) |
-| **ROUGE-1** | `rouge1`, `rouge-1`, `rouge_1` | Counting | Tier 1 + F-measure gadget | Unigram overlap (P/R/F1) |
-| **ROUGE-2** | `rouge2`, `rouge-2`, `rouge_2` | Counting | Tier 1 + F-measure gadget | Bigram overlap (P/R/F1) |
-| **ROUGE-L** | `rougel`, `rouge-l`, `rouge_l` | Tropical (Max-Plus) | Tier 2 | Longest common subsequence (P/R/F1) |
-| **chrF** | (library only) | Counting | Tier 1 + β-F-measure gadget | Character n-gram F-score |
-
-The WFA coverage census identifies 21 of 31 common NLP metrics as
-WFA-representable. Neural metrics (BERTScore, COMET, BLEURT) are inherently
-non-WFA and out of scope.
+```console
+$ ./target/release/spectacles-cli score --metric bleu \
+    --candidate "the cat sat on the mat" \
+    --reference "the cat is on the mat" \
+    --output-format json
+[
+  {
+    "metric": "bleu",
+    "score": 0.488923022434901,
+    "brevity_penalty": 1.0
+  }
+]
+```
 
 ---
 
 ## CLI Reference
 
-The binary is `spectacles-cli`.  Every command is invoked as:
-
 ```
-spectacles-cli <COMMAND> [OPTIONS]
+spectacles-cli - Spectacles ZK scoring framework
+
+USAGE:
+  spectacles-cli <COMMAND> [OPTIONS]
+
+COMMANDS:
+  score              Score a candidate against a reference
+  batch-score        Score multiple pairs from a file (JSON, JSONL, CSV, TSV, HF datasets, SQuAD)
+  differential-test  Run differential tests across implementations
+  compile-circuit    Compile a scoring metric to an arithmetic circuit
+  estimate-size      Estimate proof size for a configuration
+  hash               Hash input data with BLAKE3
+  verify-proof       Verify a previously generated proof file
+  help               Print this help message
+  version            Print version
 ```
 
 ### `score`
 
-Score a single candidate/reference pair.
+Score a single candidate–reference pair with one metric.
 
-```bash
-spectacles-cli score [OPTIONS]
-```
+**Options:**
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--metric` | `-m` | Metric name (default: `bleu`). See table above. |
-| `--candidate` | `-c` | Candidate (hypothesis) text. **Required.** |
-| `--reference` | `-r` | Reference (gold) text. **Required.** |
-| `--triple` | `-t` | Run all three implementations and report agreement. |
-| `--output-format` | | Output format: `text` (default), `json`, `csv`, `markdown`. |
+| `--metric` | `-m` | Metric name: `exact_match`, `token_f1`, `bleu`, `rouge1`, `rouge2`, `rougel` |
+| `--candidate` | `-c` | Candidate text |
+| `--reference` | `-r` | Reference text |
+| `--triple` | `-t` | Run all three implementations (reference, automaton, circuit) and check agreement |
+| `--output-format` | | Output format: `text` (default), `json`, `csv`, `markdown` |
 
-**Examples:**
+#### Exact Match
 
-```bash
-# Basic BLEU score (text output)
-spectacles-cli score -m bleu -c "the cat sat" -r "the cat sat on the mat"
+Returns 1.0 if strings are identical, 0.0 otherwise:
 
-# Token F1 with JSON output
-spectacles-cli score -m token_f1 -c "hello world" -r "hello there" --output-format json
+```console
+$ ./target/release/spectacles-cli score --metric exact_match \
+    --candidate "hello world" --reference "hello world"
+exact_match  score=1.0000
 
-# Triple-implementation agreement check
-spectacles-cli score -m exact_match -c "yes" -r "Yes" --triple
+$ ./target/release/spectacles-cli score --metric exact_match \
+    --candidate "hello" --reference "world"
+exact_match  score=0.0000
 ```
+
+#### BLEU
+
+Bilingual Evaluation Understudy score with brevity penalty:
+
+```console
+$ ./target/release/spectacles-cli score --metric bleu \
+    --candidate "the cat sat on the mat" \
+    --reference "the cat is on the mat"
+bleu  score=0.4889  BP=1.0000
+```
+
+#### Token F1
+
+Token-level F1 with precision and recall:
+
+```console
+$ ./target/release/spectacles-cli score --metric token_f1 \
+    --candidate "the quick brown fox" \
+    --reference "the slow brown dog"
+token_f1  score=0.5000  P=0.5000  R=0.5000
+```
+
+Two out of four tokens match ("the", "brown"), giving precision = 2/4 = 0.5,
+recall = 2/4 = 0.5, F1 = 0.5.
+
+#### ROUGE-1
+
+Unigram overlap F-measure:
+
+```console
+$ ./target/release/spectacles-cli score --metric rouge1 \
+    --candidate "reference text here" \
+    --reference "candidate text here"
+rouge1  score=0.6667  P=0.6667  R=0.6667
+```
+
+#### ROUGE-2
+
+Bigram overlap F-measure:
+
+```console
+$ ./target/release/spectacles-cli score --metric rouge2 \
+    --candidate "the quick brown fox jumps over" \
+    --reference "the quick red fox jumps high"
+rouge2  score=0.4000  P=0.4000  R=0.4000
+```
+
+#### ROUGE-L
+
+Longest common subsequence F-measure:
+
+```console
+$ ./target/release/spectacles-cli score --metric rougel \
+    --candidate "the quick brown fox jumps over the lazy dog" \
+    --reference "the fast brown fox leaps over a lazy dog"
+rougel  score=0.6667  P=0.6667  R=0.6667
+```
+
+---
 
 ### `batch-score`
 
-Score multiple pairs from a file. Supports JSON, JSONL, CSV, TSV, HuggingFace datasets, and SQuAD format inputs.
+Score multiple candidate–reference pairs from a file.
 
-```bash
-spectacles-cli batch-score [OPTIONS]
-```
+**Options:**
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--input` | `-i` | Input file path. **Required.** Format auto-detected by extension (`.json`, `.jsonl`, `.csv`, `.tsv`). JSON content is further auto-detected (HF datasets, SQuAD). |
-| `--metric` | `-m` | Single metric name. |
-| `--metrics` / `--metric-list` | | Comma-separated list of metrics (e.g. `exact_match,bleu,rouge_1`). |
-| `--output-format` | | Output format: `text` (default), `json`, `csv`, `markdown`. |
+| `--input` | `-i` | Input file path (CSV, TSV, JSON, JSONL, HF datasets, SQuAD) |
+| `--metric` | `-m` | Single metric name |
+| `--metrics` | | Comma-separated list of metrics (e.g., `exact_match,bleu,rouge1`) |
+| `--output-format` | | Output format: `text` (default), `json`, `csv`, `markdown` |
 
-Either `--metric` or `--metrics` is required. Using `--metrics` runs all
-requested metrics in a single invocation instead of requiring separate runs.
+#### CSV input, single metric
 
-**Examples:**
+Given a CSV file `pairs.csv`:
 
-```bash
-# CSV input, multiple metrics, markdown table output
-spectacles-cli batch-score -i data/pairs.csv --metrics exact_match,bleu,rouge_1 --output-format markdown
-
-# JSONL input, single metric
-spectacles-cli batch-score -i data/pairs.jsonl -m token_f1
-
-# JSON array input, CSV output
-spectacles-cli batch-score -i data/pairs.json --metrics bleu --output-format csv
+```csv
+candidate,reference
+"the cat sat on the mat","the cat is on the mat"
+"hello world","hello world"
+"the quick brown fox","the slow brown dog"
+"machine learning is great","deep learning is great"
 ```
 
-### `differential-test`
-
-Run differential tests: verify that reference, WFA, and circuit
-implementations agree on random and structured inputs.
-
-```bash
-spectacles-cli differential-test [OPTIONS]
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv --metric bleu
+Scoring 4 pairs with 1 metric(s): bleu
+[0] bleu  score=0.4889  BP=1.0000
+[1] bleu  score=1.0000  BP=1.0000
+[2] bleu  score=0.3976  BP=1.0000
+[3] bleu  score=0.6687  BP=1.0000
 ```
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--count` | `-n` | Number of random test pairs (default: 50). |
-| `--seed` | `-s` | RNG seed for reproducibility (default: 42). |
+#### JSONL input
 
-**Example:**
+Given a JSONL file `pairs.jsonl`:
 
-```bash
-spectacles-cli differential-test --count 500 --seed 12345
+```jsonl
+{"candidate": "the cat sat on the mat", "reference": "the cat is on the mat"}
+{"candidate": "hello world", "reference": "hello world"}
+{"candidate": "a quick test", "reference": "a fast test"}
 ```
+
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.jsonl --metric token_f1
+Scoring 3 pairs with 1 metric(s): token_f1
+[0] token_f1  score=0.8333  P=0.8333  R=0.8333
+[1] token_f1  score=1.0000  P=1.0000  R=1.0000
+[2] token_f1  score=0.6667  P=0.6667  R=0.6667
+```
+
+#### Multiple metrics at once
+
+Use `--metrics` with a comma-separated list:
+
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv \
+    --metrics exact_match,bleu,rouge1
+Scoring 4 pairs with 3 metric(s): exact_match, bleu, rouge1
+[0] exact_match  score=0.0000
+[0] bleu         score=0.4889  BP=1.0000
+[0] rouge1       score=0.8333  P=0.8333  R=0.8333
+...
+```
+
+See [Output Formats](#output-formats) for `--output-format` variants.
+
+---
 
 ### `compile-circuit`
 
-Compile a scoring metric to an arithmetic circuit and report size estimates.
+Compile a scoring metric to a STARK arithmetic circuit.
 
-```bash
-spectacles-cli compile-circuit [OPTIONS]
+```console
+$ ./target/release/spectacles-cli compile-circuit --metric exact_match
+Compiling circuit for metric: exact_match
+Max input length: 100
+Estimated circuit size: 1000 constraints
+Estimated proof size: 23520 bytes (23.0 KB)
+
+$ ./target/release/spectacles-cli compile-circuit --metric bleu
+Compiling circuit for metric: bleu
+Max input length: 100
+Estimated circuit size: 1000 constraints
+Estimated proof size: 23520 bytes (23.0 KB)
+
+$ ./target/release/spectacles-cli compile-circuit --metric token_f1
+Compiling circuit for metric: token_f1
+Max input length: 100
+Estimated circuit size: 1000 constraints
+Estimated proof size: 23520 bytes (23.0 KB)
+
+$ ./target/release/spectacles-cli compile-circuit --metric rouge1
+Compiling circuit for metric: rouge1
+Max input length: 100
+Estimated circuit size: 1000 constraints
+Estimated proof size: 23520 bytes (23.0 KB)
+
+$ ./target/release/spectacles-cli compile-circuit --metric rougel
+Compiling circuit for metric: rougel
+Max input length: 100
+Estimated circuit size: 1000 constraints
+Estimated proof size: 23520 bytes (23.0 KB)
 ```
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--metric` | `-m` | Metric to compile (default: `exact_match`). |
-| `--max-length` | `-l` | Maximum input length in tokens (default: 100). |
+---
 
 ### `estimate-size`
 
-Estimate STARK proof size for a given circuit configuration.
+Estimate proof size for a given constraint and wire count:
 
-```bash
-spectacles-cli estimate-size [OPTIONS]
+```console
+$ ./target/release/spectacles-cli estimate-size --constraints 1000 --wires 500
+Proof size estimate:
+  Constraints:    1000
+  Wires:          500
+  Security bits:  128
+  Estimated size: 23520 bytes (23.0 KB)
+
+$ ./target/release/spectacles-cli estimate-size --constraints 5000 --wires 2500
+Proof size estimate:
+  Constraints:    5000
+  Wires:          2500
+  Security bits:  128
+  Estimated size: 74592 bytes (72.8 KB)
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--constraints` | Number of AIR constraints (default: 1000). |
-| `--wires` | Number of wire columns (default: 500). |
-| `--security` | Security level in bits (default: 128). |
+---
 
 ### `hash`
 
-Hash input data with BLAKE3 (optionally domain-separated).
+Hash input data with BLAKE3:
 
-```bash
-spectacles-cli hash [OPTIONS] [DATA]
+```console
+$ ./target/release/spectacles-cli hash "hello world"
+d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24
+
+$ ./target/release/spectacles-cli hash "spectacles framework"
+31e6db321b693d0247da20810cd769f21cee7501224aa3839ffe4e20f126d1e7
 ```
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--domain` | `-d` | Domain separation tag. |
-| `--data` | | Data to hash (also accepted as positional argument). |
+The BLAKE3 hash is used internally for Merkle commitments to WFA transition tables,
+cryptographically binding each STARK proof to the specific metric definition.
 
-**Example:**
-
-```bash
-spectacles-cli hash --domain "spectacles.score" "hello world"
-```
+---
 
 ### `verify-proof`
 
-Verify a previously generated proof file by checking its header, checksum,
-or commitment.
+Verify a previously generated STARK proof file:
 
-```bash
-spectacles-cli verify-proof [OPTIONS]
+```
+spectacles-cli verify-proof --proof result.spct
 ```
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--proof` | `-p` | Path to proof file (`.spct` binary or `.json`). Also accepted positionally. |
-
-For JSON proof files, the command parses the `CompactProof` structure, prints
-metric/score/hash details, and re-computes the BLAKE3 commitment to verify
-integrity. For binary `.spct` files, it validates the header magic bytes,
-format version, and payload checksum.
-
-**Example:**
-
-```bash
-spectacles-cli verify-proof --proof results/bleu_proof.json
-spectacles-cli verify-proof results/score.spct
-```
+Accepts `.spct` (binary) or `.json` proof files generated by the certification pipeline.
 
 ---
 
-## Input & Output Formats
+### `differential-test`
 
-### Input Formats (batch-score)
+Run differential tests comparing the reference, automaton, and circuit implementations:
 
-The `batch-score` command auto-detects format by file extension:
-
-| Extension | Format | Description |
-|-----------|--------|-------------|
-| `.json` | JSON array | Array of objects: `[{"candidate": "...", "reference": "..."}, ...]` |
-| `.json` | HuggingFace datasets | `{"data": [...]}` or array with `label`/`target`/`prediction`/`generated` fields |
-| `.json` | SQuAD | `{"data": [{"paragraphs": [{"qas": [...]}]}]}` — extracts answer/prediction pairs |
-| `.jsonl` | JSON Lines | One JSON object per line: `{"candidate": "...", "reference": "..."}` |
-| `.csv` | CSV | Header row with `reference` and `hypothesis` (or `candidate`) columns |
-| `.tsv` | TSV | Tab-separated `reference\thyypothesis` (header optional) |
-
-**CSV example:**
-
-```csv
-reference,hypothesis
-the cat sat on the mat,the cat sat
-hello world,hello there
+```
+spectacles-cli differential-test --count 100
 ```
 
-Column names are case-insensitive. Accepted column names:
-- Reference: `reference`, `ref`, `label`, `target`
-- Hypothesis: `hypothesis`, `candidate`, `hyp`, `prediction`, `generated`
+> **Note:** Differential tests with STARK proofs can be slow (minutes to hours depending
+> on `--count`). For quick validation, use `--triple` on the `score` command instead.
 
-**JSONL example:**
+---
 
-```jsonl
-{"candidate": "the cat sat", "reference": "the cat sat on the mat"}
-{"candidate": "hello there", "reference": "hello world"}
+## Supported Metrics
+
+| Metric | CLI name | Semiring | Description |
+|--------|----------|----------|-------------|
+| Exact Match | `exact_match` | Boolean | 1.0 if strings are identical, 0.0 otherwise |
+| Token F1 | `token_f1` | Counting | Token-level precision, recall, and F1 |
+| BLEU | `bleu` | Counting | BLEU-4 with brevity penalty |
+| ROUGE-1 | `rouge1` | Counting | Unigram overlap F-measure |
+| ROUGE-2 | `rouge2` | Counting | Bigram overlap F-measure |
+| ROUGE-L | `rougel` | Tropical | Longest common subsequence F-measure |
+
+Each metric is implemented three times:
+1. **Reference** — standard textbook implementation
+2. **Automaton** — weighted finite automaton over a typed semiring
+3. **Circuit** — arithmetic circuit over the Goldilocks field (p = 2⁶⁴ − 2³² + 1)
+
+---
+
+## Output Formats
+
+The `--output-format` flag is available on both `score` and `batch-score`.
+
+### Text (default)
+
+```console
+$ ./target/release/spectacles-cli score --metric token_f1 \
+    --candidate "the quick brown fox" --reference "the slow brown dog"
+token_f1  score=0.5000  P=0.5000  R=0.5000
 ```
 
-**HuggingFace datasets example:**
+### JSON
 
-```json
-{"data": [
-  {"label": "the cat sat on the mat", "prediction": "the cat sat"},
-  {"target": "hello world", "generated": "hello there"}
-]}
-```
-
-Or as a bare JSON array with alternative field names:
-
-```json
+```console
+$ ./target/release/spectacles-cli score --metric token_f1 \
+    --candidate "the quick brown fox" --reference "the slow brown dog" \
+    --output-format json
 [
-  {"label": "the cat sat on the mat", "prediction": "the cat sat"}
+  {
+    "metric": "token_f1",
+    "score": 0.5,
+    "precision": 0.5,
+    "recall": 0.5
+  }
 ]
 ```
 
-**SQuAD-style example:**
+### CSV
 
-```json
-{"data": [{"paragraphs": [{"qas": [
-  {"question": "Where is the cat?", "answers": [{"text": "on the mat"}], "id": "q1"}
-]}]}]}
+```console
+$ ./target/release/spectacles-cli score --metric bleu \
+    --candidate "the cat sat on the mat" \
+    --reference "the cat is on the mat" \
+    --output-format csv
+metric,index,score,precision,recall,brevity_penalty
+bleu,,0.4889,,,1.0000
 ```
 
-SQuAD pairs use the first answer text as reference. If a `prediction` field is
-present on the QA object, it is used as the candidate; otherwise the question is used.
+### Markdown
 
-**TSV example:**
-
-```
-reference	hypothesis
-the cat sat on the mat	the cat sat
-hello world	hello there
-```
-
-If the first line contains recognized header names it is skipped; otherwise it
-is treated as data.
-
-### Output Formats
-
-All scoring commands support `--output-format` with four options:
-
-| Format | Flag value | Description |
-|--------|-----------|-------------|
-| **Text** | `text` (default) | Human-readable, one result per line |
-| **JSON** | `json` | JSON array of score objects |
-| **CSV** | `csv` | Header + data rows: `metric,index,score,precision,recall,brevity_penalty` |
-| **Markdown** | `markdown`, `md` | Pipe-delimited table suitable for documentation |
-
----
-
-## Batch Processing
-
-Batch scoring is designed for evaluating entire datasets efficiently:
-
-```bash
-# Score 1000 pairs with three metrics in one run
-spectacles-cli batch-score \
-  -i corpus.csv \
-  --metrics exact_match,bleu,rouge_1 \
-  --output-format json > results.json
+```console
+$ ./target/release/spectacles-cli score --metric bleu \
+    --candidate "the cat sat on the mat" \
+    --reference "the cat is on the mat" \
+    --output-format markdown
+| metric | index | score | precision | recall | BP |
+|--------|-------|-------|-----------|--------|----|
+| bleu |  | 0.4889 |  |  | 1.0000 |
 ```
 
-The output contains one row per (pair, metric) combination. With `--metrics
-exact_match,bleu,rouge_1` and 100 input pairs, you get 300 result rows.
+### Batch score with markdown
 
-For corpus-level aggregation (e.g., corpus BLEU), use the library API directly
-via `BleuScorer::reference_score_corpus()`.
-
----
-
-## Architecture Overview
-
-### Rust Crates
-
-```
-crates/
-├── spectacles-core/          # Core library
-│   └── src/
-│       ├── lib.rs
-│       ├── pipeline.rs       # End-to-end metric certification with STARK proofs
-│       ├── scoring/          # 7 metrics × 3 implementations + differential testing
-│       │   ├── exact_match.rs
-│       │   ├── token_f1.rs
-│       │   ├── bleu.rs
-│       │   ├── rouge.rs
-│       │   ├── chrf.rs
-│       │   ├── regex_match.rs
-│       │   ├── pass_at_k.rs
-│       │   ├── differential.rs
-│       │   └── tokenizer.rs
-│       ├── wfa/              # Semirings, WFA operations, minimization, equivalence
-│       │   └── semiring.rs   # 10+ semiring types, EmbeddableSemiring trait
-│       ├── circuit/          # Goldilocks field, AIR constraints, STARK prover, FRI
-│       ├── evalspec/         # EvalSpec DSL: parser, type checker, compiler
-│       ├── protocol/         # Certificates, transcripts, model identity attestation
-│       ├── psi/              # OPRF-based PSI + multi-layer contamination detection
-│       └── utils/            # BLAKE3 hashing, Merkle trees, serialization, math
-├── spectacles-cli/           # Command-line interface (this README documents it)
-├── spectacles-integration/   # Integration test harness
-└── spectacles-examples/      # Benchmark & experiment binaries
-    └── src/bin/
-        ├── comprehensive_benchmark.rs
-        ├── compilation_correctness.rs
-        ├── stark_scaling_2048.rs
-        ├── e2e_certification.rs
-        └── lean_rust_conformance.rs
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv \
+    --metrics exact_match,bleu,rouge1 --output-format markdown
+Scoring 4 pairs with 3 metric(s): exact_match, bleu, rouge1
+| metric | index | score | precision | recall | BP |
+|--------|-------|-------|-----------|--------|----|
+| exact_match | 0 | 0.0000 |  |  |  |
+| exact_match | 1 | 1.0000 |  |  |  |
+| exact_match | 2 | 0.0000 |  |  |  |
+| exact_match | 3 | 0.0000 |  |  |  |
+| bleu | 0 | 0.4889 |  |  | 1.0000 |
+| bleu | 1 | 1.0000 |  |  | 1.0000 |
+| bleu | 2 | 0.3976 |  |  | 1.0000 |
+| bleu | 3 | 0.6687 |  |  | 1.0000 |
+| rouge1 | 0 | 0.8333 | 0.8333 | 0.8333 |  |
+| rouge1 | 1 | 1.0000 | 1.0000 | 1.0000 |  |
+| rouge1 | 2 | 0.5000 | 0.5000 | 0.5000 |  |
+| rouge1 | 3 | 0.7500 | 0.7500 | 0.7500 |  |
 ```
 
-### Lean 4 Formalization
+### Batch score with CSV output
 
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv \
+    --metrics exact_match,bleu,rouge1 --output-format csv
+Scoring 4 pairs with 3 metric(s): exact_match, bleu, rouge1
+metric,index,score,precision,recall,brevity_penalty
+exact_match,0,0.0000,,,
+exact_match,1,1.0000,,,
+exact_match,2,0.0000,,,
+exact_match,3,0.0000,,,
+bleu,0,0.4889,,,1.0000
+bleu,1,1.0000,,,1.0000
+bleu,2,0.3976,,,1.0000
+bleu,3,0.6687,,,1.0000
+rouge1,0,0.8333,0.8333,0.8333,
+rouge1,1,1.0000,1.0000,1.0000,
+rouge1,2,0.5000,0.5000,0.5000,
+rouge1,3,0.7500,0.7500,0.7500,
 ```
-lean/Spectacles/
-├── Semiring/             # Algebraic foundations
-│   ├── Basic.lean            # Semiring typeclass definition
-│   ├── Instances.lean        # Bool, Nat, Tropical instances
-│   ├── Goldilocks.lean       # F_p field (p = 2⁶⁴ − 2³² + 1) + Semiring instance
-│   ├── Embedding.lean        # Injective homomorphisms Bool→F_p, Nat→F_p
-│   ├── KleeneSemiring.lean   # Kleene algebra extension
-│   └── Embeddable.lean       # EmbeddableSemiring typeclass + non-embeddability proof
-├── WFA/                  # Weighted finite automata theory
-├── Circuit/              # ZK circuit compilation
-│   ├── TraceLayout.lean      # Column allocation for AIR trace
-│   ├── Compiler.lean         # AIR constraints + Tier 1/2 soundness
-│   └── Gadgets.lean          # Comparison gadgets (non-interference, soundness)
-└── EvalSpec/             # Metric specification DSL
-    ├── Syntax.lean           # AST + types
-    ├── Typing.lean           # HasType judgment
-    ├── Semantics.lean        # Big-step evaluation semantics
-    └── Compiler.lean         # Type preservation proof
+
+### Batch score with JSON output
+
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv \
+    --metrics exact_match,bleu,rouge1 --output-format json
+Scoring 4 pairs with 3 metric(s): exact_match, bleu, rouge1
+[
+  {
+    "metric": "exact_match",
+    "index": 0,
+    "score": 0.0
+  },
+  {
+    "metric": "exact_match",
+    "index": 1,
+    "score": 1.0
+  },
+  ...
+  {
+    "metric": "rouge1",
+    "index": 3,
+    "score": 0.75,
+    "precision": 0.75,
+    "recall": 0.75
+  }
+]
 ```
 
 ---
 
-## Weighted Finite Automata & Semirings
+## Triple Agreement Verification
 
-A **weighted finite automaton** (WFA) generalizes classical finite automata by
-assigning weights from a semiring to transitions and states. Given a semiring
-(S, ⊕, ⊗, 0̄, 1̄):
+The `--triple` flag runs all three implementations (reference, automaton, circuit)
+and confirms they produce identical results. This is the core correctness guarantee.
 
-- **Initial weights** λ: Q → S assign a weight to each starting state.
-- **Transition weights** δ: Q × Σ × Q → S assign weights to transitions.
-- **Final weights** ρ: Q → S assign weights to accepting states.
-- The **weight of a path** is the ⊗-product of its transition weights.
-- The **total weight of a string** is the ⊕-sum over all accepting paths.
+### Exact Match — triple check
 
-Spectacles implements the following semirings:
+```console
+$ ./target/release/spectacles-cli score --metric exact_match \
+    --candidate "hello world" --reference "hello world" --triple
+Metric: ExactMatch
+Candidate: "hello world"
+Reference: "hello world"
 
-| Semiring | (⊕, ⊗, 0̄, 1̄) | Use |
-|----------|----------------|-----|
-| **Boolean** | (∨, ∧, false, true) | Exact Match: accepts/rejects |
-| **Counting** (ℕ) | (+, ×, 0, 1) | Token F1, BLEU, ROUGE-N: count overlaps |
-| **Bounded Counting** | (min(+, B), ×, 0, 1) | BLEU clipped n-gram counts |
-| **Tropical** (min-plus) | (min, +, ∞, 0) | ROUGE-L: shortest-path ↔ LCS |
-| **Max-Plus** | (max, +, −∞, 0) | ROUGE-L alternative: longest path |
-| **Goldilocks F_p** | (+mod p, ×mod p, 0, 1) | Circuit target field |
+Reference impl:  true
+Automaton impl:  true
+Circuit impl:    true
+Agreement:       true
+```
 
-The `EmbeddableSemiring` trait (proved in Lean) identifies which semirings
-admit an injective homomorphism into the Goldilocks field — this determines
-whether a metric uses Tier 1 (algebraic) or Tier 2 (gadget-based) compilation.
+### Token F1 — triple check
+
+```console
+$ ./target/release/spectacles-cli score --metric token_f1 \
+    --candidate "the quick brown fox" --reference "the slow brown dog" --triple
+Metric: TokenF1
+Candidate: "the quick brown fox"
+Reference: "the slow brown dog"
+
+Reference impl:  P=0.5000 R=0.5000 F1=0.5000
+Automaton impl:  P=0.5000 R=0.5000 F1=0.5000
+Circuit impl:    P=0.5000 R=0.5000 F1=0.5000
+Agreement:       true
+```
+
+### BLEU — triple check
+
+```console
+$ ./target/release/spectacles-cli score --metric bleu \
+    --candidate "the cat sat on the mat" \
+    --reference "the cat is on the mat" --triple
+Metric: Bleu
+Candidate: "the cat sat on the mat"
+Reference: "the cat is on the mat"
+
+Reference impl:  0.4889
+Automaton impl:  0.4889
+Circuit impl:    0.4889
+Agreement:       true
+```
+
+### ROUGE-1 — triple check
+
+```console
+$ ./target/release/spectacles-cli score --metric rouge1 \
+    --candidate "the quick brown fox jumps over the lazy dog" \
+    --reference "the fast brown fox leaps over a lazy dog" --triple
+Metric: Rouge1
+Candidate: "the quick brown fox jumps over the lazy dog"
+Reference: "the fast brown fox leaps over a lazy dog"
+
+Reference impl:  F1=0.6667
+Automaton impl:  F1=0.6667
+Circuit impl:    F1=0.6667
+Agreement:       true
+```
+
+### ROUGE-2 — triple check
+
+```console
+$ ./target/release/spectacles-cli score --metric rouge2 \
+    --candidate "the quick brown fox jumps over the lazy dog" \
+    --reference "the fast brown fox leaps over a lazy dog" --triple
+Metric: Rouge2
+Candidate: "the quick brown fox jumps over the lazy dog"
+Reference: "the fast brown fox leaps over a lazy dog"
+
+Reference impl:  F1=0.2500
+Automaton impl:  F1=0.2500
+Circuit impl:    F1=0.2500
+Agreement:       true
+```
+
+### ROUGE-L — triple check
+
+```console
+$ ./target/release/spectacles-cli score --metric rougel \
+    --candidate "the quick brown fox jumps over the lazy dog" \
+    --reference "the fast brown fox leaps over a lazy dog" --triple
+Metric: RougeL
+Candidate: "the quick brown fox jumps over the lazy dog"
+Reference: "the fast brown fox leaps over a lazy dog"
+
+Reference impl:  F1=0.6667
+Automaton impl:  F1=0.6667
+Circuit impl:    F1=0.6667
+Agreement:       true
+```
+
+---
+
+## Batch Scoring In Depth
+
+### Supported input formats
+
+| Format | Extension | Fields |
+|--------|-----------|--------|
+| CSV | `.csv` | `candidate`, `reference` columns |
+| TSV | `.tsv` | `candidate`, `reference` columns (tab-separated) |
+| JSON | `.json` | Array of `{"candidate": "...", "reference": "..."}` |
+| JSONL | `.jsonl` | One JSON object per line |
+| HF datasets | varies | Hugging Face dataset format |
+| SQuAD | `.json` | SQuAD-format JSON |
+
+### Workflow example
+
+1. Prepare your evaluation pairs as CSV:
+
+```csv
+candidate,reference
+"the cat sat on the mat","the cat is on the mat"
+"hello world","hello world"
+"the quick brown fox","the slow brown dog"
+"machine learning is great","deep learning is great"
+```
+
+2. Run all metrics and get a markdown report:
+
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv \
+    --metrics exact_match,bleu,token_f1,rouge1,rouge2,rougel \
+    --output-format markdown
+```
+
+3. Pipe JSON output for programmatic consumption:
+
+```console
+$ ./target/release/spectacles-cli batch-score --input pairs.csv \
+    --metrics bleu,rouge1 --output-format json > results.json
+```
+
+---
+
+## Architecture
+
+Spectacles uses a **two-tier compilation** pipeline:
+
+```
+NLP Metric
+    │
+    ▼
+Weighted Finite Automaton (WFA) over typed semiring
+    │
+    ├─ Tier 1: Direct semiring homomorphism φ: S → F_p
+    │          (Boolean, Counting semirings → Goldilocks field)
+    │
+    └─ Tier 2: Comparison gadgets with 62-bit decomposition
+               (Tropical min-plus semiring → Goldilocks field)
+    │
+    ▼
+STARK Arithmetic Circuit
+    │
+    ▼
+Zero-Knowledge Proof (BLAKE3 Merkle commitment to transition table)
+```
+
+### Semiring decomposition
+
+| Metric | Semiring | Compilation Tier |
+|--------|----------|-----------------|
+| Exact Match | Boolean | Tier 1 (algebraic) |
+| Token F1 | Counting | Tier 1 + F-measure gadget |
+| BLEU-4 | Counting | Tier 1 + geometric mean + brevity penalty gadgets |
+| ROUGE-1/2 | Counting | Tier 1 + F-measure gadget |
+| ROUGE-L | Tropical | Tier 2 (comparison gadgets) |
 
 ---
 
 ## STARK Proof System
 
-Spectacles uses a **FRI-based STARK** (Scalable Transparent ARgument of
-Knowledge) for proof generation:
+Each STARK proof includes a BLAKE3 Merkle commitment to the WFA transition table,
+cryptographically binding the proof to the specific metric definition.
 
-1. **Trace generation.**  The prover evaluates the WFA on the input, recording
-   a trace of state weights at each step. This trace forms the "execution
-   trace" of the AIR program.
+### Scaling benchmarks
 
-2. **Constraint enforcement.**  AIR (Algebraic Intermediate Representation)
-   constraints encode the WFA transition rules and semiring laws as polynomial
-   equations of degree ≤ 2 over the Goldilocks field.
-
-3. **FRI commitment.**  The prover commits to the trace via a Merkle tree of
-   Reed-Solomon evaluations and uses FRI (Fast Reed-Solomon Interactive Oracle
-   Proofs of Proximity) to prove low-degree of the constraint composition
-   polynomial.
-
-4. **Metric binding.**  Each proof includes a BLAKE3 Merkle commitment to the
-   WFA transition table, binding the proof to the specific metric definition.
-
-### Performance
-
-| WFA States | Prove Time | Verify Time | Proof Size |
-|-----------|-----------|-------------|------------|
-| 4 | 6 ms | 0.4 ms | 27 KiB |
+| States | Prove Time | Verify Time | Proof Size |
+|--------|-----------|-------------|------------|
 | 64 | 71 ms | 0.9 ms | 107 KiB |
 | 256 | 1,191 ms | 1.4 ms | 204 KiB |
-| **400** | **3,821 ms** | **1.5 ms** | **270 KiB** |
-| **1,024** | **49.9 s** | **2.3 ms** | **490 KiB** |
+| 400 | 3,821 ms | 1.5 ms | 270 KiB |
+| 1,024 | 49,883 ms | 2.3 ms | 490 KiB |
 
-Scaling model: `prove_time ≈ 0.009 × n^2.18` (R² = 0.989).
-Verification stays sub-3 ms at all tested scales.
+Verification is constant-time (~1–2 ms) regardless of circuit size.
 
-### Proof Format
-
-Binary proofs use the `.spct` format:
-
-| Field | Size | Description |
-|-------|------|-------------|
-| Magic | 4 B | `SPCT` |
-| Version | 4 B | Major.minor (currently 1.0) |
-| Format byte | 1 B | 0=CompactBinary, 1=JSON, 2=CBOR |
-| Payload size | 8 B | Little-endian u64 |
-| Checksum | 32 B | BLAKE3 hash of payload |
-| Payload | var | Serialized proof data |
-
-JSON proofs use the `CompactProof` structure with fields: `metric_id`,
-`candidate_hash`, `reference_hash`, `score_numerator`, `score_denominator`,
-`commitment`, and `proof_data`.
-
----
-
-## Lean 4 Formalization
-
-The Lean 4 formalization (in `lean/`) provides machine-checked proofs that
-the algebraic pipeline is sound. Build with:
+### Running STARK benchmarks
 
 ```bash
-cd lean && lake build
-# → Build completed successfully (13 sorry warnings, 0 errors)
+cargo run --release --bin stark_scaling_2048
+cargo run --release --bin comprehensive_benchmark
 ```
 
-### Lean–Rust Conformance
+> **Warning:** STARK proof generation is computationally intensive.
+> The `comprehensive_benchmark` generates 25+ proofs and may take several minutes.
 
-Since Lean proofs cannot be formally extracted to Rust, Spectacles bridges
-the gap with 68,748 differential tests and a dedicated conformance checker:
+---
 
-```bash
-cargo run --release --bin lean_rust_conformance
-# → 8/8 checks passed (100.0%), 0 disagreements
+## Workspace Crates
+
+| Crate | Description |
+|-------|-------------|
+| `spectacles-core` | WFA engine, semirings, circuit compiler, STARK prover/verifier |
+| `spectacles-cli` | Command-line interface (`spectacles-cli` binary) |
+| `spectacles-integration` | Integration tests and cross-implementation validation |
+| `spectacles-examples` | Benchmark binaries (`comprehensive_benchmark`, `stark_scaling_2048`, etc.) |
+
+### Core modules
+
 ```
-
-The conformance checker verifies that the Rust semiring implementations
-produce identical results to the Lean definitions on a structured test suite.
-
-### Axioms
-
-The formalization rests on 3 axioms:
-
-1. **Cryptographic axiom** — BLAKE3 is collision-resistant (standard assumption).
-2. **Specification axiom** — The EvalSpec DSL correctly captures metric semantics.
-3. **Mathematical axiom** — Certain modular arithmetic lemmas (pending Mathlib).
-
----
-
-## What's Proved
-
-| Claim | Status | File |
-|-------|--------|------|
-| Semiring axioms (Bool, Nat, Tropical, Goldilocks) | ✅ Proved | `Semiring/*.lean` |
-| Injective embeddings Bool→F_p, Nat→F_p | ✅ Proved | `Semiring/Embedding.lean` |
-| EmbeddableSemiring typeclass + instances | ✅ Mostly proved | `Semiring/Embeddable.lean` |
-| Tropical non-embeddability (why Tier 2 needed) | 📝 Stated | `Semiring/Embeddable.lean` |
-| Tier 1/2 soundness (modulo STARK axiom) | ✅ Proved | `Circuit/Compiler.lean` |
-| Constraint degree ≤ 2 | ✅ Proved | `Circuit/Compiler.lean` |
-| Gadget non-interference | ✅ Proved | `Circuit/Gadgets.lean` |
-| Comparison gadget soundness (circuit-level) | ✅ Proved | `Circuit/Gadgets.lean` |
-| EvalSpec DSL: syntax, types, semantics | ✅ Formalized | `EvalSpec/*.lean` |
-| End-to-end: STARK → trace → WFA execution | ✅ Proved | `Circuit/Compiler.lean` |
-
-**Previously vacuous, now genuine:**
-- `constraint_satisfied` was `True` → now evaluates `SymExpr` on trace rows
-- `h_stark_accepts` was `True` → now `STARKVerifierResult.accepted = true`
-- Comparison gadget was tautological → now circuit-level `ComparisonGadgetWitness`
-
----
-
-## Key Numbers
-
-| Measurement | Result |
-|-------------|--------|
-| Differential tests | 68,748 triple-agreement, **0 disagreements** |
-| Rust semiring unit tests | **191 passing** |
-| STARK verify time (400 states) | **1.5 ms** |
-| STARK proof size (400 states) | **270 KiB** |
-| E2E STARK certification proofs | **76 proofs** verified (4–1,024 states) |
-| WFA metric coverage | **21/31** NLP metrics (67.7%) |
-| Lean sorrys | **13** remaining (down from 15+) |
-| Lean axioms | **3** (1 cryptographic, 1 specification, 1 mathematical) |
-| Multi-layer contamination | **100% accuracy** (vs 83.3% n-gram-only) |
-| Bugs found by verification | **2** (Montgomery reduction, Lagrange interpolation) |
-
----
-
-## Limitations
-
-- **Lean-to-Rust gap**: Bridged by 68,748 differential tests, not formal
-  extraction. No verified code generation from Lean to Rust.
-- **13 remaining sorrys**: 5 engineering, 5 mathematical (need Mathlib),
-  3 modular arithmetic. All have proof sketches.
-- **Metric scope**: String-matching metrics only. Neural metrics (BERTScore,
-  COMET, BLEURT) are inherently non-WFA and out of scope.
-- **STARK scaling**: Demonstrated up to 1,024 WFA states. Proving time grows
-  as O(n²) in state count; 2,048+ states are extrapolated only.
-- **Model identity**: TEE-based attestation is protocol-level design;
-  production deployment requires hardware support.
-
----
-
-## Further Documentation
-
-| Document | Location | Description |
-|----------|----------|-------------|
-| Tool paper | `docs/paper/tool_paper.pdf` | Full results-oriented paper (41 pages) |
-| Architecture guide | `docs/ARCHITECTURE.md` | Build, test, and project structure |
-| API reference | `docs/api.md` | Detailed Rust API documentation |
-| Grounding | `docs/meta/grounding.json` | Every paper claim mapped to evidence |
-| Critique triage | `docs/meta/critique_triage.json` | Category B assessment |
-| Benchmark data | `data/*.json` | Raw experimental results |
+crates/spectacles-core/src/
+├── circuit/      # Arithmetic circuit representation and compilation
+├── evalspec/     # Evaluation specification types
+├── protocol/     # STARK proof protocol
+├── psi/          # Private set intersection
+├── scoring/      # Reference metric implementations
+├── wfa/          # Weighted finite automata engine
+├── utils/        # Shared utilities
+├── pipeline.rs   # End-to-end certification pipeline
+└── lib.rs        # Public API
+```
 
 ---
 

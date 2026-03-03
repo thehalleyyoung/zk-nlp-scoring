@@ -13,7 +13,7 @@ use std::time::Instant;
 
 const NUM_PAIRS: usize = 2000;
 const SEED: u64 = 20240101;
-const OUTPUT_PATH: &str = "/Users/halleyyoung/Documents/div/mathdivergence/best/spectacles-wfa-zk-scoring-circuits/implementation/production_corpus_results.json";
+const OUTPUT_PATH: &str = "/Users/halleyyoung/Documents/div/mathdivergence/best/zk-nlp-scoring/implementation/production_corpus_results.json";
 
 #[derive(Debug, Serialize)]
 struct ProductionCorpusBenchmark {

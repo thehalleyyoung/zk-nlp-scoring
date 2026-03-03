@@ -412,7 +412,7 @@ fn main() {
     }
 
     let pgfplots_path = "/Users/halleyyoung/Documents/div/mathdivergence/best/\
-        spectacles-wfa-zk-scoring-circuits/implementation/stark_scaling_pgfplots.dat";
+        zk-nlp-scoring/implementation/stark_scaling_pgfplots.dat";
     write_pgfplots_data(&results, pgfplots_path);
 
     let benchmark = Benchmark2048 {
@@ -426,7 +426,7 @@ fn main() {
     };
 
     let json_path = "/Users/halleyyoung/Documents/div/mathdivergence/best/\
-        spectacles-wfa-zk-scoring-circuits/implementation/stark_scaling_2048_results.json";
+        zk-nlp-scoring/implementation/stark_scaling_2048_results.json";
     let json = serde_json::to_string_pretty(&benchmark).unwrap();
     std::fs::write(json_path, &json).unwrap();
     println!("  Results saved to: {}", json_path);

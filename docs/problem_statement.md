@@ -2,7 +2,7 @@
 
 ## Slug
 
-`spectacles-wfa-zk-scoring-circuits`
+`zk-nlp-scoring`
 
 ---
 

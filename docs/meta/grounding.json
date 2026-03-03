@@ -1,5 +1,5 @@
 {
-  "project": "spectacles-wfa-zk-scoring-circuits",
+  "project": "zk-nlp-scoring",
   "title": "Spectacles: Verified Compiler from Semiring-Weighted Automata to Zero-Knowledge Scoring Circuits",
   "last_updated": "2026-03-02",
   "formalization_status": {
