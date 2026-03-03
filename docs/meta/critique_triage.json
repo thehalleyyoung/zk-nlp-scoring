@@ -1,5 +1,0 @@
-{
-  "category": "B",
-  "key_quote": "The 15 Lean sorrys and unverified Lean-to-Rust gap fundamentally undermine the machine-checkable correctness claim.",
-  "rationale": "All three reviewers acknowledge the Schützenberger grounding and typed semiring abstraction as novel contributions. The primary blockers are the incomplete Lean formalization (15 sorrys), the unverified Lean-to-Rust compilation gap, STARK proof scope confusion (execution fidelity vs metric correctness), and scaling/coverage limits. These are depth/completeness issues."
-}

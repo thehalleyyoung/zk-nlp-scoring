@@ -17,3 +17,14 @@ __pycache__/
 *.pyc
 lean/.lake/
 lean_rust_conformance.json
+
+# Reviews, critiques, and critique-triages (auto-generated)
+**/review_*
+**/reviews/
+**/critiques.json
+**/critique_triage.json
+**/critique_*.md
+**/critique_*.json
+**/critique_responses.json
+**/reviewer_persona_cache*.json
+
