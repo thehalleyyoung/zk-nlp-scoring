@@ -1,0 +1,1 @@
+{"baseline": "a9ce3222570c881003c42cc01c18310668c39a59", "claim": "owner-commitment-boundary-v1", "plan": "plan.md", "result": "source-test.log", "change": "Explicit external owner digest verifier and scope-limited manuscript", "remaining": ["Complete AIR audit", "Full matched prior-method comparison", "Metadata rights resolution"], "cost_usd_wave2": 0}

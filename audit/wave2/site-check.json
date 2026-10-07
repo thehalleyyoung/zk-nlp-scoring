@@ -1,0 +1,16 @@
+{
+  "local_links": [
+    "tool_paper.pdf",
+    "REPRODUCE.md",
+    "SECURITY.md",
+    "audit/wave2/plan.md",
+    "audit/wave2/source-test.log",
+    "audit/wave2/prior-art.md",
+    "ZENODO_VERDICT.md"
+  ],
+  "all_exist": true,
+  "publication_pdfs": [
+    "tool_paper.pdf"
+  ],
+  "deployment": "not_performed"
+}

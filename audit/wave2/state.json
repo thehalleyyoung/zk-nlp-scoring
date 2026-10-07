@@ -1,0 +1,9 @@
+{
+  "proposal_id": "zk-nlp-scoring",
+  "baseline_commit": "a9ce3222570c881003c42cc01c18310668c39a59",
+  "claim_version": "owner-commitment-boundary-v1",
+  "stage": "improved_checkpoint",
+  "paid_calls": 0,
+  "active_job_ids": [],
+  "next_action": "independent review and metadata rights resolution"
+}

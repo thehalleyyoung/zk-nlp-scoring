@@ -1,0 +1,9 @@
+{
+  "crates/spectacles-p3/src/lib.rs": "b929110cd8ec62963a64bc770732ce5d2c27a90645d360e07a2fc9afb5222df3",
+  "crates/spectacles-p3/tests/commitment_binding.rs": "38a2cddf1a971af89f23f33a99829b5e0f738e2d0c4445321e44ba8a55885103",
+  "crates/spectacles-p3/Cargo.lock": "de5adcc00b5a233c3f78678c9361cfda0065b10cb5f4e599a43d34d1d8eb6f0a",
+  "audit/wave2/plan.md": "10844e83e8f493d8b75a8f0909d610eecdc4ef0720b4b01f374d097d22a76b86",
+  "audit/wave2/source-test.log": "9118933ea1d03804818febfbe29b3e01f459c356bf70d5d63a8ec5c386d69d9e",
+  "tool_paper.pdf": "f9674ea093568aa64c2e459d5c5c551ac22e468ebe1c82c86ffd8fedc22e9604",
+  "../build-target/release/deps/commitment_binding-2a31fc37379509da": "ae3f00fe1a50a208242b16ee94884f17f87d1a5b610b3aa0b9691fdd7b9f831e"
+}
